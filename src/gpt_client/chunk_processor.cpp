@@ -79,7 +79,6 @@ bool ChunkProcessor::parse_chunk_data(const std::string &chunk_str,
 // data sections and processing each chunk. Return whether to continue
 // processing the event stream.
 bool ChunkProcessor::handle_data_lines(const std::string &lines, bool print) {
-  std::string combined_text; // TODO: figure out how to return this.
 
   auto data_parts = this->_extractDataSections(lines);
   for (const std::string &data_str : data_parts) {

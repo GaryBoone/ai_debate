@@ -7,7 +7,7 @@
 #include <cpr/cpr.h>
 #include <nlohmann/json.hpp>
 
-#include "gpt_client.h"
+#include "gpt_client/gpt_client.h"
 
 using json = nlohmann::json;
 
@@ -23,7 +23,7 @@ std::string getOpenAIKey() {
 
 int main() {
   std::string api_key = getOpenAIKey();
-  const std::string prompt = "Explain the significance of the first 2 lines of "
+  const std::string prompt = "Return just the first 2 lines of "
                              "Chaucer's Canterbury Tales.";
   GptClient gpt_client(api_key, "gpt-4-1106-preview");
   std::cout << "Prompt: " << prompt << std::endl;

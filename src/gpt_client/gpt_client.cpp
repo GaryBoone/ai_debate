@@ -7,8 +7,8 @@
 #include <cpr/cpr.h>
 #include <nlohmann/json.hpp>
 
+#include "../util/color_print.h"
 #include "chunk_processor.h"
-#include "color_print.h"
 #include "gpt_client.h"
 #include "gpt_error.h"
 
@@ -23,7 +23,8 @@ std::string GptClient::get_completion(const std::string &prompt, bool print) {
 
   // The callback function that processes the response from the API. It should
   // return true to continue processing the response, and false to stop.
-  auto callback = [&chunk_processor, print](std::string line, intptr_t /*userdata*/) {
+  auto callback = [&chunk_processor, print](std::string line,
+                                            intptr_t /*userdata*/) {
     // data:
     // {"id":"chatcmpl-99NALtut2d2S0X3MtlQ4GV6boiOmU",
     //  "object":"chat.completion.chunk",

@@ -1,7 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
 
 #define private public
-#include "../src/chunk_processor.h"
+#include "../src/gpt_client/chunk_processor.h"
 
 TEST_CASE("extractDataSections extracts valid examples",
           "[extractDataSections]") {

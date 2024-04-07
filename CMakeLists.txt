@@ -26,8 +26,8 @@ set(MAIN_SOURCE
 
 # Source files without the main file.
 set(APP_SOURCES
-  src/gpt_client.cpp 
-  src/chunk_processor.cpp
+  src/gpt_client/gpt_client.cpp 
+  src/gpt_client/chunk_processor.cpp
 )
 
 # Library files.
