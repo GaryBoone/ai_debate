@@ -6,60 +6,35 @@
 #include <cpr/cpr.h>
 #include <nlohmann/json.hpp>
 
+#include "../util/color_print.h"
 #include "chunk_processor.h"
 
 using json = nlohmann::json;
 
 // Process the chunks of data from the API response. Return whether to continue
 // processing the event stream.
-bool GptChunkProcessor::parse_chunk_data(const std::string &chunk_str,
-                                         bool print) {
-  // The chunk may be a data section with a '[DONE]' message, which is not valid
-  // JSON. Check for that before attempting to parse JSON.
-  std::regex done_re(R"(^\s*[DONE]\s*$)");
-  if (std ::regex_search(chunk_str, done_re)) {
-    return false;
-  }
+bool ClaudeChunkProcessor::parse_chunk_data(const std::string &chunk_str,
+                                            bool print) {
   try {
     json chunk_data = json::parse(chunk_str);
 
-    json choices = chunk_data.value("choices", json::array());
-    if (choices.empty()) {
-      printf("No choices in chunk data.\n"); // TODO: Handle errors.
+    json completion = chunk_data.value("completion", json::array());
+    if (completion.empty()) {
+      printf("No completion in chunk data.\n"); // TODO: Handle errors.
       fflush(stdout);
       return false;
     }
-    json choice = choices[0];
-    if (choice.empty()) {
-      printf("No choice in choices.\n"); // TODO: Handle errors.
-      fflush(stdout);
-      return false;
-    }
-    if (choice.contains("finish_reason") &&
-        choice["finish_reason"].is_string()) {
-      std::string finish_reason = choice["finish_reason"].get<std::string>();
+    if (chunk_data.contains("stop_reason") &&
+        chunk_data["stop_reason"].is_string()) {
+      std::string finish_reason = chunk_data["stop_reason"].get<std::string>();
       this->_finish_reason = finish_reason;
-      if (finish_reason != "stop") {
+      if (finish_reason != "stop_sequence") {
         printf("unknown finish_reason: %s\n", finish_reason.c_str());
         fflush(stdout);
       }
       return false;
     }
-
-    json delta = choice.value("delta", json::object());
-    if (delta.empty()) {
-      printf("No delta in choice.\n"); // TODO: Handle errors.
-      fflush(stdout);
-      return false;
-    }
-
-    json content = delta.value("content", json::object());
-    if (content.empty()) {
-      printf("No content in delta.\n"); // TODO: Handle errors.
-      fflush(stdout);
-      return false;
-    }
-    std::string str = content.get<std::string>();
+    std::string str = completion.get<std::string>();
     if (print) {
       printf("%s", str.c_str());
       fflush(stdout);
@@ -78,8 +53,8 @@ bool GptChunkProcessor::parse_chunk_data(const std::string &chunk_str,
 // Process the lines of data from the API response by breaking it up into its
 // data sections and processing each chunk. Return whether to continue
 // processing the event stream.
-bool GptChunkProcessor::handle_data_lines(const std::string &lines,
-                                          bool print) {
+bool ClaudeChunkProcessor::handle_data_lines(const std::string &lines,
+                                             bool print) {
 
   auto data_parts = this->_extractDataSections(lines);
   for (const std::string &data_str : data_parts) {
@@ -99,10 +74,10 @@ bool GptChunkProcessor::handle_data_lines(const std::string &lines,
 // The matcher is forgiving of leading and trailing whitespace and data sections
 // do not have to be separated by a blank line.
 std::vector<std::string>
-GptChunkProcessor::_extractDataSections(const std::string &input) {
+ClaudeChunkProcessor::_extractDataSections(const std::string &input) {
   // Regex: find 'data:' followed by any amount of whitespace, then lazy capture
   // until a newline or end of string.
-  std::regex pattern(R"(data:\s*(.*?)(?:\n|$))");
+  std::regex pattern(R"(data:\s*([\s\S]*?)(?:\n|$))");
   std::vector<std::string> dataSections;
 
   std::sregex_iterator iter(input.begin(), input.end(), pattern);

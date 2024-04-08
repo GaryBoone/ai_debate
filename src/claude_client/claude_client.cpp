@@ -9,46 +9,45 @@
 
 #include "../util/color_print.h"
 #include "chunk_processor.h"
-#include "gpt_client.h"
-#include "gpt_error.h"
+#include "claude_client.h"
+#include "claude_error.h"
 
 using json = nlohmann::json;
 
 const int MAX_TOKENS = 1000;
 
-std::string GptClient::get_completion(const std::string &prompt, bool print) {
-  std::string url = "https://api.openai.com/v1/chat/completions";
+std::string ClaudeClient::get_completion(const std::string &prompt,
+                                         bool print) {
+  std::string url = "https://api.anthropic.com/v1/complete";
   std::string combined_text;
-  GptChunkProcessor chunk_processor;
+  ClaudeChunkProcessor chunk_processor;
 
   // The callback function that processes the response from the API. It should
   // return true to continue processing the response, and false to stop.
   auto callback = [&chunk_processor, print](std::string line,
                                             intptr_t /*userdata*/) {
-    // data:
-    // {"id":"chatcmpl-99NALtut2d2S0X3MtlQ4GV6boiOmU",
-    //  "object":"chat.completion.chunk",
-    //  "created":1712021029,
-    //  "model":"gpt-4-1106-preview",
-    //  "system_fingerprint":"fp_d986a8d1ba",
-    //  "choices":[{"index":0,"delta":{"role":"assistant","content":""},
-    //  "logprobs":null,
-    //  "finish_reason":null}]}
-
-    // For testing:
-    // std::string line =
-    //     R"(data: {"id":"c", "object":"f", "created":7, "model":"m",
-    //     "system_fingerprint":"s",
-    //     "choices":[{"index":0,"delta":{"role":"assistant","content":"foo"},
-    //     "logprobs":null,"finish_reason":null}]})";
+    // event: completion
+    // data: {"type":"completion","id":"compl_01XGHuotGNHPZzrLNP9EEweK",
+    //"completion":" Unfortunately","stop_reason":null,"model":"claude-2.1",
+    // "stop":null,"log_id":"compl_01XGHuotGNHPZzrLNP9EEweK"  }
 
     std::regex error_re(R"(\s*"error":\s*)"); // It can start with returns.
-    std::regex data_re(R"(^\s*data:\s*)");
+    std::regex data_re(R"(^event: completion\s*data:\s*)");
+    std::regex ping_re(R"(^event: ping\s*data:\s*)");
 
+    std::string ping_line = R"(data: {"type": "ping"}\n\n)";
+    if (line.find(ping_line) == 0) {
+      line = line.substr(ping_line.length());
+    }
+    // printColoredString(YELLOW, "line: -->%s<--", line.c_str());
     if (std::regex_search(line, data_re)) {
       return chunk_processor.handle_data_lines(line, print);
     } else if (std::regex_search(line, error_re)) {
-      return handle_gpt_error(line);
+      return handle_claude_error(line);
+    } else if (std::regex_search(line, ping_re)) {
+      // Ignore ping events.
+      // printf("ping!\n"); // TODO: Remove.
+      // fflush(stdout);
     } else {
       printColoredString(RED, "unknown response: --->%s<---\n",
                          line.c_str()); // TODO: Remove.
@@ -56,15 +55,15 @@ std::string GptClient::get_completion(const std::string &prompt, bool print) {
     return true;
   };
 
-  json messages = json::array();
-  messages.push_back(json{{"role", "user"}, {"content", prompt}});
+  std::string prompt2 = "\n\nHuman: " + prompt + "\n\nAssistant:";
   cpr::Response response = cpr::Post(
       cpr::Url{url},
-      cpr::Header{{"Authorization", "Bearer " + this->_gpt_api_key},
-                  {"Content-Type", "application/json"}},
+      cpr::Header{{"anthropic-version", "2023-06-01"},
+                  {"content-type", "application/json"},
+                  {"x-api-key", this->_claude_api_key}},
       cpr::Body{json{{"model", this->_model},
-                     {"messages", messages},
-                     {"max_tokens", MAX_TOKENS},
+                     {"prompt", prompt2},
+                     {"max_tokens_to_sample", MAX_TOKENS},
                      {"stream", true}}
                     .dump()},
       cpr::WriteCallback(

@@ -3,11 +3,11 @@
 
 #include <string>
 
-class GptChunkProcessor {
+class ChunkProcessor {
 public:
-  bool parse_chunk_data(const std::string &chunk_str, bool print = false);
+  bool parse_chunk_data(const std::string &chunk_str, bool print=false);
 
-  bool handle_data_lines(const std::string &lines, bool print = false);
+  bool handle_data_lines(const std::string &lines, bool print=false);
 
   // Accessors.
   std::string get_combined_text() { return _combined_text; }

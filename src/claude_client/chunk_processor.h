@@ -3,7 +3,7 @@
 
 #include <string>
 
-class GptChunkProcessor {
+class ClaudeChunkProcessor {
 public:
   bool parse_chunk_data(const std::string &chunk_str, bool print = false);
 

@@ -5,7 +5,7 @@
 
 TEST_CASE("extractDataSections extracts valid examples",
           "[extractDataSections]") {
-  ChunkProcessor cp;
+  GptChunkProcessor cp;
 
   std::vector<std::string> sections = cp._extractDataSections("data: foo");
   REQUIRE(sections == std::vector<std::string>{"foo"});
@@ -60,7 +60,7 @@ TEST_CASE("extractDataSections extracts valid examples",
 }
 
 TEST_CASE("extractDataSections invalid examples", "[extractDataSections]") {
-  ChunkProcessor cp;
+  GptChunkProcessor cp;
 
   std::vector<std::string> sections = cp._extractDataSections("dat: foo");
   REQUIRE(sections == std::vector<std::string>{});

@@ -28,6 +28,10 @@ set(MAIN_SOURCE
 set(APP_SOURCES
   src/gpt_client/gpt_client.cpp 
   src/gpt_client/chunk_processor.cpp
+  src/claude_client/claude_client.cpp 
+  src/claude_client/chunk_processor.cpp
+  src/gemini_client/gemini_client.cpp 
+  src/gemini_client/chunk_processor.cpp
 )
 
 # Library files.
