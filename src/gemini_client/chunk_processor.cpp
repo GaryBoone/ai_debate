@@ -120,7 +120,6 @@ ChunkProcessor::_extractDataSections(const std::string &input) {
   // Regex: find 'data:' followed by any amount of whitespace, then lazy capture
   // until a non-capturing newline or end of string. Use [\s\S] to match any
   // character including newlines.
-  // std::regex pattern(R"(data:\s*(.*?)(?:\n|$))");
   std::regex pattern(R"(data:\s*([\s\S]*?)(?:\n|$))");
 
   std::vector<std::string> dataSections;

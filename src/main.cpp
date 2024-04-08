@@ -5,13 +5,11 @@
 #include <string>
 
 #include <cpr/cpr.h>
-#include <nlohmann/json.hpp>
 
-#include "claude_client/claude_client.h"
+#include "api_client/api_client.h"
+#include "api_client/api_client_factory.h"
 #include "gemini_client/gemini_client.h"
-#include "gpt_client/gpt_client.h"
-
-using json = nlohmann::json;
+#include "util/stacktrace.h"
 
 std::string getAPIKey(const char *env_var_name) {
   const char *openai_key = std::getenv(env_var_name);
@@ -24,32 +22,38 @@ std::string getAPIKey(const char *env_var_name) {
 }
 
 int main() {
+  std::set_terminate(globalExceptionHandler);
+
   const std::string prompt = "Return just the first 2 lines of "
                              "Chaucer's pre-copyright Canterbury Tales.";
   std::cout << "Prompt: " << prompt << std::endl;
 
   // #if false
-  printf("*************** Gemini ***************\n");
-  fflush(stdout);
-  std::string gemini_key = getAPIKey("GEMINI_API_KEY");
-  GeminiClient gemini_client(gemini_key, "claude-2");
-  gemini_client.get_completion(prompt, true);
-  // #endif
-
-  // #if false
-  printf("\n\\n*************** Claude ***************\n");
+  printf("\n\n*************** API--Claude ***************\n");
   fflush(stdout);
   std::string anthropic_key = getAPIKey("ANTHROPIC_API_KEY");
-  ClaudeClient claude_client(anthropic_key, "claude-2");
+  // ClaudeClient claude_client(anthropic_key, "claude-2");
+  ApiClient claude_client = APIClientFactory::createClaudeClient(anthropic_key);
   claude_client.get_completion(prompt, true);
   // #endif
 
   // #if false
-  printf("\n\n*************** GPT ***************\n");
+  printf("\n\n*************** API--GPT ***************\n");
   fflush(stdout);
   std::string gpt_api_key = getAPIKey("OPENAI_API_KEY");
-  GptClient gpt_client(gpt_api_key, "gpt-4-1106-preview");
+  ApiClient gpt_client = APIClientFactory::createGPTClient(gpt_api_key);
   gpt_client.get_completion(prompt, true);
+  printf("\n\n*************** API--GPT 2 *************\n");
+  fflush(stdout);
+  gpt_client.get_completion(prompt, true);
+  // #endif
+
+  // #if false
+  printf("\n\n*************** API--Gemini ***************\n");
+  fflush(stdout);
+  std::string gemini_key = getAPIKey("GEMINI_API_KEY");
+  ApiClient gemini_client = APIClientFactory::createGeminiClient(gemini_key);
+  gemini_client.get_completion(prompt, true);
   // #endif
 
   return 0;

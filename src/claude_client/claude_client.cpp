@@ -20,7 +20,7 @@ std::string ClaudeClient::get_completion(const std::string &prompt,
                                          bool print) {
   std::string url = "https://api.anthropic.com/v1/complete";
   std::string combined_text;
-  ClaudeChunkProcessor chunk_processor;
+  ClaudeChunkProcessor2 chunk_processor;
 
   // The callback function that processes the response from the API. It should
   // return true to continue processing the response, and false to stop.
@@ -49,7 +49,7 @@ std::string ClaudeClient::get_completion(const std::string &prompt,
       // printf("ping!\n"); // TODO: Remove.
       // fflush(stdout);
     } else {
-      printColoredString(RED, "unknown response: --->%s<---\n",
+      printColoredString(RED, "unknown response3: --->%s<---\n",
                          line.c_str()); // TODO: Remove.
     }
     return true;

@@ -6,13 +6,13 @@
 #include <cpr/cpr.h>
 #include <nlohmann/json.hpp>
 
-#include "chunk_processor.h"
+#include "gpt_chunk_processor.h"
 
 using json = nlohmann::json;
 
 // Process the chunks of data from the API response. Return whether to continue
 // processing the event stream.
-bool GptChunkProcessor::parse_chunk_data(const std::string &chunk_str,
+bool GPTChunkProcessor::parse_chunk_data(const std::string &chunk_str,
                                          bool print) {
   // The chunk may be a data section with a '[DONE]' message, which is not valid
   // JSON. Check for that before attempting to parse JSON.
@@ -73,47 +73,4 @@ bool GptChunkProcessor::parse_chunk_data(const std::string &chunk_str,
   }
 
   return true;
-}
-
-// Process the lines of data from the API response by breaking it up into its
-// data sections and processing each chunk. Return whether to continue
-// processing the event stream.
-bool GptChunkProcessor::handle_data_lines(const std::string &lines,
-                                          bool print) {
-
-  auto data_parts = this->_extractDataSections(lines);
-  for (const std::string &data_str : data_parts) {
-    // printColoredString(GREEN, "Part: -->%s<--\n", data_str.c_str());
-
-    bool cont = this->parse_chunk_data(data_str, print);
-    if (!cont) {
-      return false;
-    }
-  }
-  return true;
-}
-
-// Extract data sections from the input string. Each data section begins with
-// 'data:' and ends with a newline or the end of the string. Return a vector of
-// the extracted data sections, without the 'data:' prefix and trailing newline.
-// The matcher is forgiving of leading and trailing whitespace and data sections
-// do not have to be separated by a blank line.
-std::vector<std::string>
-GptChunkProcessor::_extractDataSections(const std::string &input) {
-  // Regex: find 'data:' followed by any amount of whitespace, then lazy capture
-  // until a newline or end of string.
-  std::regex pattern(R"(data:\s*([\s\S]*?)(?:\n|$))");
-  std::vector<std::string> dataSections;
-
-  std::sregex_iterator iter(input.begin(), input.end(), pattern);
-  std::sregex_iterator end;
-
-  while (iter != end) {
-    std::smatch match = *iter;
-    // Capture the data excluding the 'data:' prefix and trailing newline.
-    dataSections.push_back(match[1].str());
-    ++iter;
-  }
-
-  return dataSections;
 }

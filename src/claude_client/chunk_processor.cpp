@@ -13,8 +13,8 @@ using json = nlohmann::json;
 
 // Process the chunks of data from the API response. Return whether to continue
 // processing the event stream.
-bool ClaudeChunkProcessor::parse_chunk_data(const std::string &chunk_str,
-                                            bool print) {
+bool ClaudeChunkProcessor2::parse_chunk_data(const std::string &chunk_str,
+                                             bool print) {
   try {
     json chunk_data = json::parse(chunk_str);
 
@@ -53,8 +53,8 @@ bool ClaudeChunkProcessor::parse_chunk_data(const std::string &chunk_str,
 // Process the lines of data from the API response by breaking it up into its
 // data sections and processing each chunk. Return whether to continue
 // processing the event stream.
-bool ClaudeChunkProcessor::handle_data_lines(const std::string &lines,
-                                             bool print) {
+bool ClaudeChunkProcessor2::handle_data_lines(const std::string &lines,
+                                              bool print) {
 
   auto data_parts = this->_extractDataSections(lines);
   for (const std::string &data_str : data_parts) {
@@ -74,7 +74,7 @@ bool ClaudeChunkProcessor::handle_data_lines(const std::string &lines,
 // The matcher is forgiving of leading and trailing whitespace and data sections
 // do not have to be separated by a blank line.
 std::vector<std::string>
-ClaudeChunkProcessor::_extractDataSections(const std::string &input) {
+ClaudeChunkProcessor2::_extractDataSections(const std::string &input) {
   // Regex: find 'data:' followed by any amount of whitespace, then lazy capture
   // until a newline or end of string.
   std::regex pattern(R"(data:\s*([\s\S]*?)(?:\n|$))");

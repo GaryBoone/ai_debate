@@ -56,7 +56,7 @@ std::string GeminiClient::get_completion(const std::string &prompt,
     } else if (std::regex_search(line, error_re)) {
       return handle_gemini_error(line);
     } else {
-      printColoredString(RED, "unknown response: --->%s<---\n",
+      printColoredString(RED, "unknown response0: --->%s<---\n",
                          line.c_str()); // TODO: Remove.
     }
     return true;

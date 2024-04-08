@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10) # Adjust minimum CMake version as needed
+cmake_minimum_required(VERSION 3.10)
 
 project(openai_client)
 
@@ -32,17 +32,43 @@ set(APP_SOURCES
   src/claude_client/chunk_processor.cpp
   src/gemini_client/gemini_client.cpp 
   src/gemini_client/chunk_processor.cpp
+  src/api_client/api_client.cpp
+  src/api_client/api_stream_handler.cpp
+  src/api_client/gpt_chunk_processor.cpp
+  src/api_client/gpt_request_maker.cpp
+  src/api_client/claude_chunk_processor.cpp
+  src/api_client/claude_request_maker.cpp
+  src/api_client/gemini_chunk_processor.cpp
+  src/api_client/gemini_request_maker.cpp
+  src/util/stacktrace.cpp
 )
 
 # Library files.
 set(DEP_LIBS
   cpr::cpr 
   nlohmann_json::nlohmann_json
+  cpptrace::cpptrace
 )
+
+# Include cpptrace for better stack traces.
+include(FetchContent)
+FetchContent_Declare(
+  cpptrace
+  GIT_REPOSITORY https://github.com/jeremy-rifkin/cpptrace.git
+  GIT_TAG main
+)
+FetchContent_MakeAvailable(cpptrace)
+# Force the correct casing for the include path
+get_filename_component(CPPTRACE_INCLUDE_DIR ${cpptrace_SOURCE_DIR}/Include ABSOLUTE) 
+include_directories(${CPPTRACE_INCLUDE_DIR}) 
 
 # Define the main executable and link the required libraries.
 find_package(cpr REQUIRED)
 find_package(nlohmann_json REQUIRED) 
+include_directories(${cpptrace_SOURCE_DIR})  # After FetchContent_MakeAvailable
+message(STATUS "cpptrace_SOURCE_DIR: ${cpptrace_SOURCE_DIR}")
+message(STATUS "CPPTRACE_INCLUDE_DIR: ${CPPTRACE_INCLUDE_DIR}")
+
 # Avoid `file(GLOB SOURCES src/*.cpp)` because it won't pick up new files automatically.
 add_executable(openai_app ${MAIN_SOURCE} ${APP_SOURCES})
 target_link_libraries(openai_app PRIVATE ${DEP_LIBS})
@@ -65,3 +91,4 @@ if(USE_ENV_API_KEY)
 else()
   message(STATUS "Provide OPENAI_API_KEY via -DOPENAI_API_KEY=your_key during CMake configuration")
 endif()
+

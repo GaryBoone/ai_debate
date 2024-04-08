@@ -50,7 +50,7 @@ std::string GptClient::get_completion(const std::string &prompt, bool print) {
     } else if (std::regex_search(line, error_re)) {
       return handle_gpt_error(line);
     } else {
-      printColoredString(RED, "unknown response: --->%s<---\n",
+      printColoredString(RED, "unknown response1: --->%s<---\n",
                          line.c_str()); // TODO: Remove.
     }
     return true;
