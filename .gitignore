@@ -3,6 +3,3 @@
 .clangd
 
 build/
-cmake_install.cmake
-Makefile
-CMakeFiles/
