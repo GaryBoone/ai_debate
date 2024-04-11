@@ -26,12 +26,6 @@ set(MAIN_SOURCE
 
 # Source files without the main file.
 set(APP_SOURCES
-  src/gpt_client/gpt_client.cpp 
-  src/gpt_client/chunk_processor.cpp
-  src/claude_client/claude_client.cpp 
-  src/claude_client/chunk_processor.cpp
-  src/gemini_client/gemini_client.cpp 
-  src/gemini_client/chunk_processor.cpp
   src/api_client/api_client.cpp
   src/api_client/api_stream_handler.cpp
   src/api_client/gpt_chunk_processor.cpp
@@ -48,6 +42,7 @@ set(DEP_LIBS
   cpr::cpr 
   nlohmann_json::nlohmann_json
   cpptrace::cpptrace
+  expected
 )
 
 # For each included library, the git command is given for checking the tags.
@@ -67,6 +62,7 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(expected)
 message(STATUS "expected_SOURCE_DIR: ${expected_SOURCE_DIR}")
+include_directories(${expected_SOURCE_DIR})
 
 # Include cpptrace for better stack traces.
 # To check the tags,
@@ -78,6 +74,7 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(cpptrace)
 message(STATUS "cpptrace_SOURCE_DIR: ${cpptrace_SOURCE_DIR}")
+include_directories(${cpptrace_SOURCE_DIR})
 
 # Include cpr for HTTP requests.
 # To check the tags,
@@ -90,6 +87,7 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(cpr)
 message(STATUS "cpr_SOURCE_DIR: ${cpr_SOURCE_DIR}")
+include_directories(${cpr_SOURCE_DIR}) 
 
 # Include nlohmann/json for JSON parsing.
 # To check the tags,
@@ -100,6 +98,7 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(json)
 message(STATUS "json_SOURCE_DIR: ${json_SOURCE_DIR}")
+include_directories(${json_SOURCE_DIR}) 
 
 # Include doctest for testing.
 # To check the tags,

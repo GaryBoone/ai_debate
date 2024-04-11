@@ -6,18 +6,21 @@
 #include <string>
 
 #include <cpr/cpr.h>
+#include <tl/expected.hpp>
 
 #include "../util/color_print.h"
 #include "api_client.h"
+#include "api_error.h"
 #include "api_stream_handler.h"
-#include "gpt_error.h"
+#include "claude_chunk_processor.h"
+#include "gemini_chunk_processor.h"
+#include "gpt_chunk_processor.h"
 #include "i_request_maker.h"
 
-std::string ApiClient::get_completion(const std::string &prompt, bool print) {
+template <typename T>
+std::string ApiClient<T>::get_completion(const std::string &prompt,
+                                         bool print) {
   std::string combined_text;
-  // std::unique_ptr<IChunkProcessor> gpt_chunk_processor =
-  //     std::make_unique<GPTChunkProcessor>();
-  // ApiStreamHandler stream_handler(std::move(gpt_chunk_processor));
 
   // The callback function that processes the response from the API. It should
   // return true to continue processing the response, and false to stop.
@@ -31,9 +34,18 @@ std::string ApiClient::get_completion(const std::string &prompt, bool print) {
     std::string line = this->_filter_lines(raw_line);
 
     if (std::regex_search(line, data_re)) {
-      return this->_stream_handler.handle_data_lines(line, print);
+      auto x = this->_stream_handler.handle_data_lines(line, print);
+      if (x.has_value()) {
+        return x.value();
+      } else {
+        printColoredString(RED, "Error: %s\n", x.error().message.c_str());
+        return false;
+      }
     } else if (std::regex_search(line, error_re)) {
-      return handle_gpt_error(line); // TODO: Fix.
+      // TODO: Fix. Handle errors.
+      // return handle_api_error(line); // TODO: Fix.
+      printColoredString(RED, "Error: %s\n", line.c_str());
+      return false;
     } else {
       printColoredString(RED, "unknown response: --->%s<---\n",
                          line.c_str()); // TODO: Remove.
@@ -61,7 +73,8 @@ std::string ApiClient::get_completion(const std::string &prompt, bool print) {
 
 // Remove unnecessary event and ping type lines from the given line, returning
 // the modified line.
-std::string ApiClient::_filter_lines(const std::string &raw_lines) {
+template <typename T>
+std::string ApiClient<T>::_filter_lines(const std::string &raw_lines) {
   const std::string completion = "event: completion";
   const std::string ping_event = "event: ping";
   const std::string ping_type = R"(data: {"type": "ping"})";
@@ -86,3 +99,7 @@ std::string ApiClient::_filter_lines(const std::string &raw_lines) {
              ? ""
              : oss.str();
 }
+
+template class ApiClient<GPTChunkProcessor>;
+template class ApiClient<GeminiChunkProcessor>;
+template class ApiClient<ClaudeChunkProcessor>;

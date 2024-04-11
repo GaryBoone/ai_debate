@@ -7,7 +7,8 @@
 
 class GeminiChunkProcessor : public IChunkProcessor {
 public:
-  bool parse_chunk_data(const std::string &chunk_str, bool print = false);
+  tl::expected<bool, APIError> parse_chunk_data(const std::string &chunk_str,
+                                                bool print = false);
 
 private:
   std::string _combined_text;

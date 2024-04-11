@@ -8,7 +8,9 @@
 
 #include "api_client/api_client.h"
 #include "api_client/api_client_factory.h"
-#include "gemini_client/gemini_client.h"
+#include "api_client/claude_chunk_processor.h"
+#include "api_client/gemini_chunk_processor.h"
+#include "api_client/gpt_chunk_processor.h"
 #include "util/stacktrace.h"
 
 std::string getAPIKey(const char *env_var_name) {
@@ -33,7 +35,8 @@ int main() {
   fflush(stdout);
   std::string anthropic_key = getAPIKey("ANTHROPIC_API_KEY");
   // ClaudeClient claude_client(anthropic_key, "claude-2");
-  ApiClient claude_client = APIClientFactory::createClaudeClient(anthropic_key);
+  ApiClient<ClaudeChunkProcessor> claude_client =
+      APIClientFactory::createClaudeClient(anthropic_key);
   claude_client.get_completion(prompt, true);
   // #endif
 
@@ -41,7 +44,8 @@ int main() {
   printf("\n\n*************** API--GPT ***************\n");
   fflush(stdout);
   std::string gpt_api_key = getAPIKey("OPENAI_API_KEY");
-  ApiClient gpt_client = APIClientFactory::createGPTClient(gpt_api_key);
+  ApiClient<GPTChunkProcessor> gpt_client =
+      APIClientFactory::createGPTClient(gpt_api_key);
   gpt_client.get_completion(prompt, true);
   printf("\n\n*************** API--GPT 2 *************\n");
   fflush(stdout);
@@ -52,7 +56,8 @@ int main() {
   printf("\n\n*************** API--Gemini ***************\n");
   fflush(stdout);
   std::string gemini_key = getAPIKey("GEMINI_API_KEY");
-  ApiClient gemini_client = APIClientFactory::createGeminiClient(gemini_key);
+  ApiClient<GeminiChunkProcessor> gemini_client =
+      APIClientFactory::createGeminiClient(gemini_key);
   gemini_client.get_completion(prompt, true);
   // #endif
 
