@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.5)
 
 project(openai_client)
 
@@ -50,26 +50,71 @@ set(DEP_LIBS
   cpptrace::cpptrace
 )
 
-# Include cpptrace for better stack traces.
+# For each included library, the git command is given for checking the tags.
+# Note that the git command returns them in lexicographical order. So, for
+# example, v1.9.0 comes after v1.10.0 because as strings "v1.9" is sorted after
+# "v1.1". However, these tags represent semantic versioning, which means that
+# each part of the version tag is a separate number. So, v1.10.0 is laaer
+# version than v1.9.0.
 include(FetchContent)
+# Include expected for error handling.
+# To check the tags,
+# $ git ls-remote --tags https://github.com/TartanLlama/expected.git
+FetchContent_Declare(
+  expected
+  GIT_REPOSITORY https://github.com/TartanLlama/expected.git
+  GIT_TAG        v1.1.0  # origin/master
+)
+FetchContent_MakeAvailable(expected)
+message(STATUS "expected_SOURCE_DIR: ${expected_SOURCE_DIR}")
+
+# Include cpptrace for better stack traces.
+# To check the tags,
+# $ git ls-remote --tags https://github.com/jeremy-rifkin/cpptrace.git
 FetchContent_Declare(
   cpptrace
   GIT_REPOSITORY https://github.com/jeremy-rifkin/cpptrace.git
-  GIT_TAG main
+  GIT_TAG v0.5.2  # main
 )
 FetchContent_MakeAvailable(cpptrace)
-# Force the correct casing for the include path
-get_filename_component(CPPTRACE_INCLUDE_DIR ${cpptrace_SOURCE_DIR}/Include ABSOLUTE) 
-include_directories(${CPPTRACE_INCLUDE_DIR}) 
-
-# Define the main executable and link the required libraries.
-find_package(cpr REQUIRED)
-find_package(nlohmann_json REQUIRED) 
-include_directories(${cpptrace_SOURCE_DIR})  # After FetchContent_MakeAvailable
 message(STATUS "cpptrace_SOURCE_DIR: ${cpptrace_SOURCE_DIR}")
-message(STATUS "CPPTRACE_INCLUDE_DIR: ${CPPTRACE_INCLUDE_DIR}")
 
-# Avoid `file(GLOB SOURCES src/*.cpp)` because it won't pick up new files automatically.
+# Include cpr for HTTP requests.
+# To check the tags,
+# $ git ls-remote --tags https://github.com/libcpr/cpr.git
+include(FetchContent)
+FetchContent_Declare(
+  cpr 
+  GIT_REPOSITORY https://github.com/libcpr/cpr.git
+  GIT_TAG 1.10.5
+)
+FetchContent_MakeAvailable(cpr)
+message(STATUS "cpr_SOURCE_DIR: ${cpr_SOURCE_DIR}")
+
+# Include nlohmann/json for JSON parsing.
+# To check the tags,
+# $ git ls-remote --tags https://github.com/nlohmann/json.git
+FetchContent_Declare(
+  json 
+  URL https://github.com/nlohmann/json/releases/download/v3.11.3/json.tar.xz
+)
+FetchContent_MakeAvailable(json)
+message(STATUS "json_SOURCE_DIR: ${json_SOURCE_DIR}")
+
+# Include doctest for testing.
+# To check the tags,
+# $ git ls-remote --tags https://github.com/onqtam/doctest
+FetchContent_Declare(
+  doctest 
+  GIT_REPOSITORY "https://github.com/onqtam/doctest"
+  GIT_TAG v2.4.9
+) 
+FetchContent_MakeAvailable(doctest)
+message(STATUS "doctest_SOURCE_DIR: ${doctest_SOURCE_DIR}")
+include_directories(${doctest_SOURCE_DIR}) 
+
+# Avoid `file(GLOB SOURCES src/*.cpp)` because it won't pick up new files
+# automatically.
 add_executable(openai_app ${MAIN_SOURCE} ${APP_SOURCES})
 target_link_libraries(openai_app PRIVATE ${DEP_LIBS})
 
@@ -78,9 +123,9 @@ target_link_libraries(openai_app PRIVATE ${DEP_LIBS})
 set(TEST_SOURCES
   tests/chunk_processor_test.cpp
 )
-find_package(Catch2 REQUIRED)
+
 add_executable(openai_tests ${APP_SOURCES} ${TEST_SOURCES})
-target_link_libraries(openai_tests PRIVATE Catch2::Catch2WithMain ${DEP_LIBS}) 
+target_link_libraries(openai_tests PRIVATE ${DEP_LIBS} doctest)
 
 
 # Handle OPENAI_API_KEY with an option and proper usage instructions 
