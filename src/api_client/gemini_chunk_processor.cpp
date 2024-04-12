@@ -26,43 +26,33 @@ GeminiChunkProcessor::parse_chunk_data(const std::string &chunk_str,
   }
   try {
     json chunk_data = json::parse(chunk_str);
-    // printColoredString(RED, "chunks: -->%s<--", chunk_data.dump().c_str());
 
     json choices = chunk_data.value("candidates", json::array());
     if (choices.empty()) {
-      printf("No choices in chunk data.\n"); // TODO: Handle errors.
-      fflush(stdout);
-      return false;
+      return tl::unexpected(APIError(APIErrorType::RESPONSE_JSON_PARSE,
+                                     "no candidates in chunk data."));
     }
     json choice = choices[0];
     if (choice.empty()) {
-      printf("No choice in choices.\n"); // TODO: Handle errors.
-      fflush(stdout);
-      return false;
+      return tl::unexpected(APIError(APIErrorType::RESPONSE_JSON_PARSE,
+                                     "no choice in candidates."));
     }
 
-    // printf("choice: >>%s<<\n", choice.dump().c_str());
-    // fflush(stdout);
     json content = choice.value("content", json::object());
     if (content.empty()) {
-      printf("No content in choice.\n"); // TODO: Handle errors.
-      fflush(stdout);
-      return false;
+      return tl::unexpected(
+          APIError(APIErrorType::RESPONSE_JSON_PARSE, "no content in choice."));
     }
-    // printf("content: >>%s<<\n", content.dump().c_str());
-    // fflush(stdout);
 
     json parts = content.value("parts", json::object());
     if (parts.empty()) {
-      printf("No parts in content.\n"); // TODO: Handle errors.
-      fflush(stdout);
-      return false;
+      return tl::unexpected(
+          APIError(APIErrorType::RESPONSE_JSON_PARSE, "no parts in content."));
     }
     json text = parts[0].value("text", json::object());
     if (text.empty()) {
-      printf("No parts in content.\n"); // TODO: Handle errors.
-      fflush(stdout);
-      return false;
+      return tl::unexpected(
+          APIError(APIErrorType::RESPONSE_JSON_PARSE, "no text in parts."));
     }
     std::string str = text.get<std::string>();
     if (print) {
@@ -72,9 +62,8 @@ GeminiChunkProcessor::parse_chunk_data(const std::string &chunk_str,
     this->_combined_text += str;
 
   } catch (const json::parse_error &e) {
-    std::cout << "chunk error: " << e.what() << std::endl << std::flush;
-    fflush(stdout);
-    // Ignore parsing errors for incomplete chunks.
+    return tl::unexpected(
+        APIError(APIErrorType::RESPONSE_JSON_PARSE, e.what()));
   }
 
   return true;

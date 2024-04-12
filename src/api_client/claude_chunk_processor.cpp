@@ -25,8 +25,8 @@ ClaudeChunkProcessor::parse_chunk_data(const std::string &chunk_str,
 
     json completion = chunk_data.value("completion", json::array());
     if (completion.empty()) {
-      return tl::unexpected(
-          APIError(APIErrorType::JSON_PARSE, "no completion in chunk data."));
+      return tl::unexpected(APIError(APIErrorType::RESPONSE_JSON_PARSE,
+                                     "no completion in chunk data."));
     }
     if (chunk_data.contains("stop_reason") &&
         chunk_data["stop_reason"].is_string()) {
@@ -36,7 +36,7 @@ ClaudeChunkProcessor::parse_chunk_data(const std::string &chunk_str,
       this->_finish_reason = finish_reason;
       if (finish_reason != FINISH_REASON_VALUE) {
         return tl::unexpected(
-            APIError(APIErrorType::JSON_PARSE,
+            APIError(APIErrorType::RESPONSE_JSON_PARSE,
                      "unknown finish_reason: " + finish_reason));
       }
       return false;
@@ -48,7 +48,8 @@ ClaudeChunkProcessor::parse_chunk_data(const std::string &chunk_str,
     this->_combined_text += str;
 
   } catch (const json::parse_error &e) {
-    return tl::unexpected(APIError(APIErrorType::JSON_PARSE, e.what()));
+    return tl::unexpected(
+        APIError(APIErrorType::RESPONSE_JSON_PARSE, e.what()));
   }
 
   return true;

@@ -2,10 +2,17 @@
 
 #include <string>
 
-enum class APIErrorType { JSON_PARSE, RESPONSE_PARSE, IO, UNKNOWN };
+// APIErrorType provides errors returned by the API and calls to it.
+enum class APIErrorType {
+  RESPONSE_JSON_PARSE,
+  REQUEST_JSON_PARSE,
+  RESPONSE_FIELD_PARSE,
+  HTTP_ERROR,
+  UNKNOWN
+};
 
 struct APIError {
-  APIError(APIErrorType et, std::string msg) : error(et), message(msg){};
-  APIErrorType error;
+  APIErrorType error_type;
   std::string message;
+  APIError(APIErrorType et, std::string msg) : error_type(et), message(msg){};
 };

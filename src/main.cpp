@@ -30,7 +30,11 @@ int main() {
                              "Chaucer's pre-copyright Canterbury Tales.";
   std::cout << "Prompt: " << prompt << std::endl;
 
-  // #if false
+#define DO_GPT
+#define DO_CLAUDE
+#define DO_GEMINI
+
+#ifdef DO_CLAUDE
   printf("\n\n*************** API--Claude ***************\n");
   fflush(stdout);
   std::string anthropic_key = getAPIKey("ANTHROPIC_API_KEY");
@@ -38,28 +42,25 @@ int main() {
   ApiClient<ClaudeChunkProcessor> claude_client =
       APIClientFactory::createClaudeClient(anthropic_key);
   claude_client.get_completion(prompt, true);
-  // #endif
+#endif
 
-  // #if false
+#ifdef DO_GPT
   printf("\n\n*************** API--GPT ***************\n");
   fflush(stdout);
   std::string gpt_api_key = getAPIKey("OPENAI_API_KEY");
   ApiClient<GPTChunkProcessor> gpt_client =
       APIClientFactory::createGPTClient(gpt_api_key);
   gpt_client.get_completion(prompt, true);
-  printf("\n\n*************** API--GPT 2 *************\n");
-  fflush(stdout);
-  gpt_client.get_completion(prompt, true);
-  // #endif
+#endif
 
-  // #if false
+#ifdef DO_GEMINI
   printf("\n\n*************** API--Gemini ***************\n");
   fflush(stdout);
   std::string gemini_key = getAPIKey("GEMINI_API_KEY");
   ApiClient<GeminiChunkProcessor> gemini_client =
       APIClientFactory::createGeminiClient(gemini_key);
-  gemini_client.get_completion(prompt, true);
-  // #endif
+  auto out = gemini_client.get_completion(prompt, true);
+#endif
 
   return 0;
 }

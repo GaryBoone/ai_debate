@@ -27,8 +27,9 @@ ApiStreamHandler<T>::handle_data_lines(const std::string &lines, bool print) {
     auto cont = chunk_processor.parse_chunk_data(data_str, print);
     if (!cont) {
       // TODO: Handle the error.
-      return false;
+      return cont;
     }
+    this->_combined_text += chunk_processor.get_combined_text();
   }
   return true;
 }

@@ -10,8 +10,6 @@
 
 #include "../util/color_print.h"
 #include "api_client.h"
-#include "api_error.h"
-#include "api_stream_handler.h"
 #include "claude_chunk_processor.h"
 #include "gemini_chunk_processor.h"
 #include "gpt_chunk_processor.h"
@@ -20,7 +18,7 @@
 template <typename T>
 std::string ApiClient<T>::get_completion(const std::string &prompt,
                                          bool print) {
-  std::string combined_text;
+  std::string lines;
 
   // The callback function that processes the response from the API. It should
   // return true to continue processing the response, and false to stop.
@@ -28,40 +26,50 @@ std::string ApiClient<T>::get_completion(const std::string &prompt,
     std::regex data_re(R"(^\s*data:\s*)");
     std::regex error_re(R"(\s*"error":\s*)"); // It can start with returns.
 
-    // printColoredString(YELLOW, "line: -->%s<--", raw_line.c_str());
+    lines.append(raw_line);
 
-    // Drop ping event and type lines.
-    std::string line = this->_filter_lines(raw_line);
+    // Strip ping event and type lines.
+    std::string filtered_line = this->_filter_lines(lines);
+    // printColoredString(YELLOW, "fline: ==->%s<-==\n", line.c_str());
 
-    if (std::regex_search(line, data_re)) {
-      auto x = this->_stream_handler.handle_data_lines(line, print);
-      if (x.has_value()) {
-        return x.value();
+    if (std::regex_search(filtered_line, data_re)) {
+      auto result =
+          this->_stream_handler.handle_data_lines(filtered_line, print);
+      if (result.has_value()) {
+        lines.clear();
+        return result.value();
       } else {
-        printColoredString(RED, "Error: %s\n", x.error().message.c_str());
+        if (result.error().error_type == APIErrorType::RESPONSE_JSON_PARSE) {
+          // Sometime the OpenAI API returns partial chunks that have to be
+          // combined before they can be parsed. If the JSON parsing fails, we
+          // can just ignore the error, accumulate the chunks, and try again.
+          return true;
+        } else {
+          printColoredString(RED, "another error: %s\n",
+                             result.error().message.c_str());
+        }
         return false;
       }
-    } else if (std::regex_search(line, error_re)) {
+    } else if (std::regex_search(filtered_line, error_re)) {
       // TODO: Fix. Handle errors.
       // return handle_api_error(line); // TODO: Fix.
-      printColoredString(RED, "Error: %s\n", line.c_str());
+      printColoredString(RED, "API returned error: %s\n",
+                         filtered_line.c_str());
       return false;
     } else {
       printColoredString(RED, "unknown response: --->%s<---\n",
-                         line.c_str()); // TODO: Remove.
+                         filtered_line.c_str()); // TODO: Remove.
     }
     return true;
   };
 
   APIRequest request = this->_request_maker->create(prompt);
 
-  cpr::Response response = cpr::Post(
-      request.url, request.header, request.body,
-      cpr::WriteCallback(
-          callback,
-          0)); // Wrap the lambda with std::function and pass userdata if needed
+  cpr::Response response = cpr::Post(request.url, request.header, request.body,
+                                     cpr::WriteCallback(callback, 0));
 
   if (response.status_code != 200) {
+    // TODO: Handle error.
     std::cout << "Error: " << response.status_code << " -- " << response.text
               << std::endl
               << std::flush;
