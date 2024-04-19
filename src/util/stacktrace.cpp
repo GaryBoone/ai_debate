@@ -24,14 +24,11 @@ void globalExceptionHandler() {
     throw;
   } catch (const std::exception &e) {
     std::cerr << "Unhandled exception: " << e.what() << std::endl;
-    // cpptrace::generate_trace().print();
     print_filtered_stacktrace();
 
   } catch (...) {
     // Handle any non-standard exceptions
     std::cerr << "Unhandled non-standard exception" << std::endl;
-    // cpptrace::generate_trace().print();
-    print_filtered_stacktrace();
   }
   std::abort();
 }

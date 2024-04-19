@@ -21,12 +21,10 @@ ApiStreamHandler<T>::handle_data_lines(const std::string &lines, bool print) {
 
   auto data_parts = this->_extract_data_sections(lines);
   for (const std::string &data_str : data_parts) {
-    // printColoredString(GREEN, "Part: -->%s<--\n", data_str.c_str());
 
     T chunk_processor;
     auto cont = chunk_processor.parse_chunk_data(data_str, print);
     if (!cont) {
-      // TODO: Handle the error.
       return cont;
     }
     this->_combined_text += chunk_processor.get_combined_text();

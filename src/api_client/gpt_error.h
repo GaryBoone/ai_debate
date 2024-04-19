@@ -19,7 +19,7 @@ inline bool handle_gpt_error(const std::string &line) {
   json errorJson = json::parse(line);
   Error error = errorJson["error"].get<Error>();
   // Handle the error accordingly
-  std::cout << "Error: " << error.message << " (Type: " << error.type << ")"
+  std::cout << "GPT Error: " << error.message << " (Type: " << error.type << ")"
             << std::endl
             << std::flush;
   return false;

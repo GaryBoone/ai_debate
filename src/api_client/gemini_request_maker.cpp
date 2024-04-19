@@ -1,7 +1,8 @@
+#include <nlohmann/json.hpp>
 #include <string>
 
+#include "api_error.h"
 #include "gemini_request_maker.h"
-#include <nlohmann/json.hpp>
 
 APIRequest GeminiRequestMaker::create(const std::string &prompt) {
   std::string full_prompt = "\n\nHuman: " + prompt + "\n\nAssistant:";
@@ -20,11 +21,8 @@ APIRequest GeminiRequestMaker::create(const std::string &prompt) {
         }
             .dump();
   } catch (nlohmann::json::exception &e) {
-    // TODO:
-    // throw GeminiError("Failed to create JSON body for Claude request: " +
-    //                   std::string(e.what()));
-    printf("Failed to create JSON body for Claude request: %s\n",
-           std::string(e.what()).c_str());
+    throw APIError(APIErrorType::REQUEST_JSON_PARSE,
+                   "Failed to create JSON for Gemini request: ", e);
   }
   return APIRequest{
       cpr::Url{this->_url + "?alt=sse&key=" + this->_gemini_api_key},

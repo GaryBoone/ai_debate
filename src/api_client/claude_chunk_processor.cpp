@@ -30,7 +30,6 @@ ClaudeChunkProcessor::parse_chunk_data(const std::string &chunk_str,
     }
     if (chunk_data.contains("stop_reason") &&
         chunk_data["stop_reason"].is_string()) {
-
       std::string finish_reason =
           chunk_data[FINISH_REASON_KEY].get<std::string>();
       this->_finish_reason = finish_reason;

@@ -41,8 +41,8 @@ inline bool isTerminal() {
 #define WHITE "\033[37m"
 
 template <typename... Args>
-void printColoredString(const std::string &color, const char *format,
-                        Args &&...args) {
+void print_colored_string(const std::string &color, const char *format,
+                          Args &&...args) {
   if (isTerminal()) {
     std::cout << color;
     std::printf(format, std::forward<Args>(args)...);

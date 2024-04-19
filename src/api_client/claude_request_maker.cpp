@@ -1,7 +1,8 @@
+#include <nlohmann/json.hpp>
 #include <string>
 
+#include "api_error.h"
 #include "claude_request_maker.h"
-#include <nlohmann/json.hpp>
 
 APIRequest ClaudeRequestMaker::create(const std::string &prompt) {
   std::string full_prompt = "\n\nHuman: " + prompt + "\n\nAssistant:";
@@ -14,11 +15,8 @@ APIRequest ClaudeRequestMaker::create(const std::string &prompt) {
         {"stream",
          true}}.dump();
   } catch (nlohmann::json::exception &e) {
-    // TODO:
-    // throw ClaudeError("Failed to create JSON body for Claude request: " +
-    //                   std::string(e.what()));
-    printf("Failed to create JSON body for Claude request: %s\n",
-           std::string(e.what()).c_str());
+    throw APIError(APIErrorType::REQUEST_JSON_PARSE,
+                   "Failed to create JSON for Claude request: ", e);
   }
   return APIRequest{
       cpr::Url{this->_url},

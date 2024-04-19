@@ -1,5 +1,6 @@
 #include <string>
 
+#include "api_error.h"
 #include "gpt_error.h"
 #include "gpt_request_maker.h"
 #include <nlohmann/json.hpp>
@@ -18,11 +19,8 @@ APIRequest GPTRequestMaker::create(const std::string &prompt) {
         {"stream",
          true}}.dump();
   } catch (json::exception &e) {
-    // TODO:
-    //  throw GPTError("Failed to create JSON body for GPT request: " +
-    //                 std::string(e.what()));
-    printf("Failed to create JSON body for GPT request: %s\n",
-           std::string(e.what()).c_str());
+    throw APIError(APIErrorType::REQUEST_JSON_PARSE,
+                   "Failed to create JSON for GPT request: ", e);
   }
   return APIRequest{
       cpr::Url{this->_url},

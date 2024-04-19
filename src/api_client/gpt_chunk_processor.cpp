@@ -71,8 +71,7 @@ GPTChunkProcessor::parse_chunk_data(const std::string &chunk_str, bool print) {
     }
     this->_combined_text += str;
   } catch (const json::parse_error &e) {
-    return tl::unexpected(
-        APIError(APIErrorType::RESPONSE_JSON_PARSE, e.what()));
+    return tl::unexpected(APIError(APIErrorType::RESPONSE_JSON_PARSE, e));
   }
 
   return true;
