@@ -101,11 +101,16 @@ ApiClient<T>::_filter_type_error_string(const std::string &raw_lines) {
   return std::regex_replace(raw_lines, type_error_re, "");
 }
 
+// Streamed data can contain lines that are not data lines, but event labels for
+// the data lines. This function filters out those lines which in many cases are
+// repeated in the data lines anyway.
 template <typename T>
 std::string ApiClient<T>::_filter_by_line(const std::string &raw_lines) {
-  const std::string completion = "event: completion";
-  const std::string ping_event = "event: ping";
-  const std::string ping_type = R"(data: {"type": "ping"})";
+  const std::string eventsToFilter[] = {
+      "event: message_start",       "event: ping",
+      "event: content_block_start", "event: content_block_delta",
+      "event: content_block_stop",  "event: message_delta",
+      "event: message_stop"};
 
   std::istringstream iss(raw_lines);
   std::ostringstream oss;
@@ -116,7 +121,9 @@ std::string ApiClient<T>::_filter_by_line(const std::string &raw_lines) {
       line.pop_back();
     }
 
-    if (line != completion && line != ping_event && line != ping_type) {
+    if (std::none_of(
+            std::begin(eventsToFilter), std::end(eventsToFilter),
+            [&line](const std::string &event) { return line == event; })) {
       oss << line << '\n';
     }
   }
