@@ -1,5 +1,6 @@
 #pragma once
 
+#include <nlohmann/json.hpp>
 #include <string>
 
 #include "i_request_maker.h"
@@ -11,8 +12,11 @@ public:
   APIRequest create(const std::string &prompt);
 
 private:
+  nlohmann::json _create_message(const std::string &role,
+                                 const std::string &text);
+
   std::string _url = "https://generativelanguage.googleapis.com/v1beta/models/"
-                     "gemini-pro:streamGenerateContent";
+                     "gemini-1.5-pro-latest:streamGenerateContent";
   std::string _gemini_api_key;
   int _max_tokens;
 };

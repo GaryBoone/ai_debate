@@ -70,5 +70,6 @@ int main() {
   }
 #endif
 
+  printf("\n");
   return 0;
 }

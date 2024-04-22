@@ -11,6 +11,9 @@ APIRequest GPTRequestMaker::create(const std::string &prompt) {
   // https://platform.openai.com/docs/api-reference/chat/create
   // Roles are: "system", "user", "assistant", "tool", "functions"
   json messages = json::array();
+  messages.push_back(json{{"role", "system"},
+                          {"content", "You are a playful poet who returns "
+                                      "responses with nouns in all-caps."}});
   messages.push_back(json{{"role", "user"}, {"content", prompt}});
   try {
     std::string body = json{

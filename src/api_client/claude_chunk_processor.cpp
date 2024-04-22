@@ -7,9 +7,9 @@
 #include <string>
 #include <tl/expected.hpp>
 
-#include "../util/color_print.h"
 #include "api_error.h"
 #include "claude_chunk_processor.h"
+
 using json = nlohmann::json;
 
 const char *TYPE_KEY = "type";
