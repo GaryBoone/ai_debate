@@ -18,7 +18,7 @@ private:
   std::unique_ptr<IRequestMaker> request_maker_;
   ApiStreamHandler<T> stream_handler_;
 
-  std::string FilterTypeErrorString(const std::string &raw_line);
-  std::string FilterByLine(const std::string &raw_line);
-  APIError ParseError(const std::string &error_str);
+  static std::string FilterTypeErrorString(const std::string &raw_line);
+  static std::string FilterByLine(const std::string &raw_line);
+  static APIError ParseError(const std::string &error_str);
 };

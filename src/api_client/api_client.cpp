@@ -111,13 +111,14 @@ std::string ApiClient<T>::FilterByLine(const std::string &raw_lines) {
   std::string line;
 
   while (std::getline(iss, line)) {
-    while (!line.empty() && (line.back() == '\r' || line.back() == '\n')) {
-      line.pop_back();
+    line.erase(std::remove(line.begin(), line.end(), '\r'), line.end());
+    line.erase(std::remove(line.begin(), line.end(), '\n'), line.end());
+    if (line.empty()) {
+      continue;
     }
 
-    if (std::none_of(
-            std::begin(events_to_filter), std::end(events_to_filter),
-            [&line](const std::string &event) { return line == event; })) {
+    if (std::find(events_to_filter.begin(), events_to_filter.end(), line) ==
+        events_to_filter.end()) {
       oss << line << '\n';
     }
   }
@@ -138,15 +139,17 @@ APIError ApiClient<T>::ParseError(const std::string &error_str) {
     json error_json = chunk_data.value("error", json::object());
     if (error_json.empty()) {
       return APIError(APIErrorType::kResponseJsonParse,
-                      "unable to parse API error obj error; no 'error' field");
+                      "unable to parse API error; no 'error' field");
     }
     json message = error_json.value("message", json::object());
     if (message.empty()) {
       return APIError(APIErrorType::kResponseJsonParse,
-                      "unable to parse API error message; no 'message' field");
+                      "unable to parse API error; no 'message' field");
     }
     return APIError(APIErrorType::kApiReturnedError, message);
   } catch (const json::parse_error &e) {
+    return APIError(APIErrorType::kResponseJsonParse, e.what());
+  } catch (const json::type_error &e) {
     return APIError(APIErrorType::kResponseJsonParse, e.what());
   }
 }

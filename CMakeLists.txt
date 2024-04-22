@@ -121,6 +121,7 @@ target_link_libraries(openai_app PRIVATE ${DEP_LIBS})
 # Define the tests.
 set(TEST_SOURCES
   tests/chunk_processor_test.cpp
+  tests/api_client_test.cpp
 )
 
 add_executable(openai_tests ${APP_SOURCES} ${TEST_SOURCES})
