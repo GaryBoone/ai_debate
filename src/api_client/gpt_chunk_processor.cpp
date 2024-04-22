@@ -1,5 +1,3 @@
-
-#include <cstdio>
 #include <iostream>
 #include <regex>
 #include <string>
@@ -9,22 +7,17 @@
 
 #include "gpt_chunk_processor.h"
 
-using json = nlohmann::json;
+using json = nlohmann::json; // NOLINT(readability-identifier-naming)
 
 // Process the chunks of data from the API response. Return whether to continue
 // processing the event stream.
 tl::expected<bool, APIError>
-GPTChunkProcessor::parse_chunk_data(const std::string &chunk_str, bool print) {
-
-  // printf("chunk_str: -->%s<--\n", chunk_str.c_str());
-  // fflush(stdout);
+GPTChunkProcessor::ParseChunkData(const std::string &chunk_str, bool print) {
 
   // The chunk may be a data section with a '[DONE]' message, which is not
   // valid JSON. Check for that before attempting to parse JSON.
   std::regex done_re(R"(^\s*[DONE]\s*$)");
   if (std ::regex_search(chunk_str, done_re)) {
-    printf("rec'd [DONE]\n");
-    fflush(stdout);
     return false;
   }
 
@@ -33,21 +26,21 @@ GPTChunkProcessor::parse_chunk_data(const std::string &chunk_str, bool print) {
 
     json choices = chunk_data.value("choices", json::array());
     if (choices.empty()) {
-      return tl::unexpected(APIError(APIErrorType::RESPONSE_JSON_PARSE,
+      return tl::unexpected(APIError(APIErrorType::kResponseJsonParse,
                                      "no choices in chunk data."));
     }
     json choice = choices[0];
     if (choice.empty()) {
       return tl::unexpected(
-          APIError(APIErrorType::RESPONSE_JSON_PARSE, "no choice in choices."));
+          APIError(APIErrorType::kResponseJsonParse, "no choice in choices."));
     }
     if (choice.contains("finish_reason") &&
         choice["finish_reason"].is_string()) {
       std::string finish_reason = choice["finish_reason"].get<std::string>();
-      this->_finish_reason = finish_reason;
+      this->finish_reason_ = finish_reason;
       if (finish_reason != "stop") {
         return tl::unexpected(
-            APIError(APIErrorType::RESPONSE_JSON_PARSE,
+            APIError(APIErrorType::kResponseJsonParse,
                      "unknown finish_reason: " + finish_reason));
       }
       return false;
@@ -56,22 +49,21 @@ GPTChunkProcessor::parse_chunk_data(const std::string &chunk_str, bool print) {
     json delta = choice.value("delta", json::object());
     if (delta.empty()) {
       return tl::unexpected(
-          APIError(APIErrorType::RESPONSE_JSON_PARSE, "no delta in choice."));
+          APIError(APIErrorType::kResponseJsonParse, "no delta in choice."));
     }
 
     json content = delta.value("content", json::object());
     if (content.empty()) {
       return tl::unexpected(
-          APIError(APIErrorType::RESPONSE_JSON_PARSE, "no content in delta."));
+          APIError(APIErrorType::kResponseJsonParse, "no content in delta."));
     }
     std::string str = content.get<std::string>();
     if (print) {
-      printf("%s", str.c_str());
-      fflush(stdout);
+      std::cout << str << std::flush;
     }
-    this->_combined_text += str;
+    this->combined_text_ += str;
   } catch (const json::parse_error &e) {
-    return tl::unexpected(APIError(APIErrorType::RESPONSE_JSON_PARSE, e));
+    return tl::unexpected(APIError(APIErrorType::kResponseJsonParse, e));
   }
 
   return true;

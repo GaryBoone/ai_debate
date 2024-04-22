@@ -12,18 +12,18 @@
 
 class APIClientFactory {
 public:
-  static ApiClient<GPTChunkProcessor> createGPTClient(std::string api_key) {
+  static ApiClient<GPTChunkProcessor> CreateGPTClient(std::string api_key) {
     return ApiClient<GPTChunkProcessor>(
         std::make_unique<GPTRequestMaker>(api_key));
   }
   static ApiClient<ClaudeChunkProcessor>
-  createClaudeClient(std::string api_key) {
+  CreateClaudeClient(std::string api_key) {
     return ApiClient<ClaudeChunkProcessor>(
         std::make_unique<ClaudeRequestMaker>(api_key));
   }
 
   static ApiClient<GeminiChunkProcessor>
-  createGeminiClient(std::string api_key) {
+  CreateGeminiClient(std::string api_key) {
     return ApiClient<GeminiChunkProcessor>(
         std::make_unique<GeminiRequestMaker>(api_key));
   }

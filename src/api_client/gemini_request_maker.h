@@ -7,16 +7,17 @@
 
 class GeminiRequestMaker : public IRequestMaker {
 public:
-  GeminiRequestMaker(const std::string &api_key, const int max_tokens = 1000)
-      : _gemini_api_key(api_key), _max_tokens(max_tokens) {}
-  APIRequest create(const std::string &prompt);
+  explicit GeminiRequestMaker(const std::string &api_key,
+                              const int max_tokens = 1000)
+      : gemini_api_key_(api_key), max_tokens_(max_tokens) {}
+  APIRequest Create(const std::string &prompt) override;
 
 private:
-  nlohmann::json _create_message(const std::string &role,
-                                 const std::string &text);
+  static nlohmann::json CreateMessage(const std::string &role,
+                                      const std::string &text);
 
-  std::string _url = "https://generativelanguage.googleapis.com/v1beta/models/"
+  std::string url_ = "https://generativelanguage.googleapis.com/v1beta/models/"
                      "gemini-1.5-pro-latest:streamGenerateContent";
-  std::string _gemini_api_key;
-  int _max_tokens;
+  std::string gemini_api_key_;
+  int max_tokens_;
 };

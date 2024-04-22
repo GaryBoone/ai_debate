@@ -10,8 +10,8 @@ struct APIRequest {
   cpr::Body body;
 };
 
-class IRequestMaker {
+class IRequestMaker { // NOLINT(cppcoreguidelines-special-member-functions)
 public:
-  virtual APIRequest create(const std::string &prompt) = 0;
+  virtual APIRequest Create(const std::string &prompt) = 0;
   virtual ~IRequestMaker() = default;
 };

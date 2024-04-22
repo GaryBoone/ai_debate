@@ -5,11 +5,11 @@
 
 #include "api_error.h"
 
-class IChunkProcessor {
+class IChunkProcessor { // NOLINT(cppcoreguidelines-special-member-functions)
 public:
   virtual tl::expected<bool, APIError>
-  parse_chunk_data(const std::string &chunk_str, bool print = false) = 0;
-  virtual std::string get_combined_text() = 0;
-  virtual std::string get_finish_reason() = 0;
+  ParseChunkData(const std::string &chunk_str, bool print) = 0;
+  virtual std::string CombinedText() = 0;
+  virtual std::string FinishReason() = 0;
   virtual ~IChunkProcessor() = default;
 };

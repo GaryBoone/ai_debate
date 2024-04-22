@@ -6,15 +6,15 @@
 
 class GPTRequestMaker : public IRequestMaker {
 public:
-  GPTRequestMaker(const std::string &api_key,
-                  const std::string &model = "gpt-4-1106-preview",
-                  const int max_tokens = 1000)
-      : _gpt_api_key(api_key), _model(model), _max_tokens(max_tokens) {}
-  APIRequest create(const std::string &prompt);
+  explicit GPTRequestMaker(const std::string &api_key,
+                           const int max_tokens = 1000,
+                           const std::string &model = "gpt-4-1106-preview")
+      : gpt_api_key_(api_key), model_(model), max_tokens_(max_tokens) {}
+  APIRequest Create(const std::string &prompt) override;
 
 private:
-  std::string _url = "https://api.openai.com/v1/chat/completions";
-  std::string _gpt_api_key;
-  std::string _model;
-  int _max_tokens;
+  std::string url_ = "https://api.openai.com/v1/chat/completions";
+  std::string gpt_api_key_;
+  std::string model_;
+  int max_tokens_;
 };

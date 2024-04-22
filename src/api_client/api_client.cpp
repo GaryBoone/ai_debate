@@ -1,7 +1,3 @@
-
-
-#include <cstdio>
-#include <iostream>
 #include <regex>
 #include <string>
 
@@ -16,11 +12,11 @@
 #include "gpt_chunk_processor.h"
 #include "i_request_maker.h"
 
-using json = nlohmann::json;
+using json = nlohmann::json; // NOLINT(readability-identifier-naming)
 
 template <typename T>
 tl::expected<std::string, APIError>
-ApiClient<T>::get_completion(const std::string &prompt, bool print) {
+ApiClient<T>::Chat(const std::string &prompt, bool print) {
   std::string lines;
 
   // The callback function that processes the response from the API. It should
@@ -34,69 +30,67 @@ ApiClient<T>::get_completion(const std::string &prompt, bool print) {
 
     // Strip stream lines like ping event and type lines to leave just the data
     // lines.
-    std::string filtered_line = this->_filter_type_error_string(lines);
-    filtered_line = this->_filter_by_line(filtered_line);
+    std::string filtered_line = this->FilterTypeErrorString(lines);
+    filtered_line = this->FilterByLine(filtered_line);
 
     // Just whitespace?
     if (std::all_of(filtered_line.begin(), filtered_line.end(),
-                    [](unsigned char c) { return std::isspace(c); })) {
+                    [](unsigned char chr) { return std::isspace(chr); })) {
       return true;
     }
 
     // Decide how to process the chunk.
     if (std::regex_search(filtered_line, data_re)) {
-      auto result =
-          this->_stream_handler.handle_data_lines(filtered_line, print);
+      auto result = this->stream_handler_.HandleDataLines(filtered_line, print);
       if (result.has_value()) {
         lines.clear();
         return result.value();
-      } else {
-        if (result.error().type() == APIErrorType::RESPONSE_JSON_PARSE) {
-          // Sometime the OpenAI API returns partial chunks that have to be
-          // combined before they can be parsed. If the JSON parsing fails, we
-          // can just ignore the error, accumulate the chunks, and try again.
-          return true;
-        } else {
-          throw APIError(APIErrorType::UNKNOWN, result.error());
-        }
-        return false;
       }
-    } else if (std::regex_search(filtered_line, error_re)) {
-      throw APIError(APIErrorType::API_RETURNED_ERROR,
-                     this->_parse_error(filtered_line));
-    } else {
-      throw APIError(APIErrorType::UNKNOWN,
-                     "unknown response: " + filtered_line);
+
+      // Sometime the OpenAI API returns partial chunks that have to be
+      // combined before they can be parsed. If the JSON parsing fails, we
+      // can just ignore the error, accumulate the chunks, and try again.
+      if (result.error().Type() == APIErrorType::kResponseJsonParse) {
+        return true;
+      }
+
+      throw APIError(APIErrorType::kUnknown, result.error());
     }
-    return true;
+
+    if (std::regex_search(filtered_line, error_re)) {
+      throw APIError(APIErrorType::kApiReturnedError,
+                     this->ParseError(filtered_line));
+    }
+
+    throw APIError(APIErrorType::kUnknown,
+                   "unknown response: " + filtered_line);
   };
 
   try {
-    APIRequest request = this->_request_maker->create(prompt);
+    APIRequest request = this->request_maker_->Create(prompt);
 
     cpr::Response response =
         cpr::Post(request.url, request.header, request.body,
                   cpr::WriteCallback(callback, 0));
 
-    if (response.status_code != 200) {
+    if (response.status_code != kSuccessCode) {
       return tl::unexpected(APIError(
-          APIErrorType::HTTP_ERROR,
+          APIErrorType::kHttpError,
           "Non-200 response code: " + std::to_string(response.status_code) +
               ": " + response.text));
     }
   } catch (const APIError &e) {
     return tl::unexpected(e);
   } catch (const std::exception &e) {
-    return tl::unexpected(APIError(APIErrorType::UNKNOWN, e.what()));
+    return tl::unexpected(APIError(APIErrorType::kUnknown, e.what()));
   }
 
-  return this->_stream_handler.get_combined_text();
+  return this->stream_handler_.CombinedText();
 }
 
 // Remove the type error strings if present.
 template <typename T>
-std::string
-ApiClient<T>::_filter_type_error_string(const std::string &raw_lines) {
+std::string ApiClient<T>::FilterTypeErrorString(const std::string &raw_lines) {
   std::regex type_error_re(R"("type":\s*"error",)");
   return std::regex_replace(raw_lines, type_error_re, "");
 }
@@ -105,8 +99,8 @@ ApiClient<T>::_filter_type_error_string(const std::string &raw_lines) {
 // the data lines. This function filters out those lines which in many cases are
 // repeated in the data lines anyway.
 template <typename T>
-std::string ApiClient<T>::_filter_by_line(const std::string &raw_lines) {
-  const std::string eventsToFilter[] = {
+std::string ApiClient<T>::FilterByLine(const std::string &raw_lines) {
+  const std::array<std::string, 7> events_to_filter = {
       "event: message_start",       "event: ping",
       "event: content_block_start", "event: content_block_delta",
       "event: content_block_stop",  "event: message_delta",
@@ -122,7 +116,7 @@ std::string ApiClient<T>::_filter_by_line(const std::string &raw_lines) {
     }
 
     if (std::none_of(
-            std::begin(eventsToFilter), std::end(eventsToFilter),
+            std::begin(events_to_filter), std::end(events_to_filter),
             [&line](const std::string &event) { return line == event; })) {
       oss << line << '\n';
     }
@@ -130,30 +124,30 @@ std::string ApiClient<T>::_filter_by_line(const std::string &raw_lines) {
 
   // Check the stream for only whitespace, returning an empty string if so.
   return std::all_of(oss.str().begin(), oss.str().end(),
-                     [](unsigned char c) { return std::isspace(c); })
+                     [](unsigned char chr) { return std::isspace(chr); })
              ? ""
              : oss.str();
 }
 
 // Parse the given line for error JSON.
 template <typename T>
-APIError ApiClient<T>::_parse_error(const std::string &error_str) {
+APIError ApiClient<T>::ParseError(const std::string &error_str) {
   try {
     json chunk_data = json::parse(error_str);
 
     json error_json = chunk_data.value("error", json::object());
     if (error_json.empty()) {
-      return APIError(APIErrorType::RESPONSE_JSON_PARSE,
+      return APIError(APIErrorType::kResponseJsonParse,
                       "unable to parse API error obj error; no 'error' field");
     }
     json message = error_json.value("message", json::object());
     if (message.empty()) {
-      return APIError(APIErrorType::RESPONSE_JSON_PARSE,
+      return APIError(APIErrorType::kResponseJsonParse,
                       "unable to parse API error message; no 'message' field");
     }
-    return APIError(APIErrorType::API_RETURNED_ERROR, message);
+    return APIError(APIErrorType::kApiReturnedError, message);
   } catch (const json::parse_error &e) {
-    return APIError(APIErrorType::RESPONSE_JSON_PARSE, e.what());
+    return APIError(APIErrorType::kResponseJsonParse, e.what());
   }
 }
 

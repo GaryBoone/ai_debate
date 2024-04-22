@@ -1,7 +1,5 @@
 
-#include <iostream>
 #include <regex>
-#include <stdexcept>
 #include <string>
 
 #include <cpr/cpr.h>
@@ -16,18 +14,18 @@
 // processing the event stream.
 template <typename T>
 tl::expected<bool, APIError>
-ApiStreamHandler<T>::handle_data_lines(const std::string &lines, bool print) {
+ApiStreamHandler<T>::HandleDataLines(const std::string &lines, bool print) {
   // throw std::runtime_error("This is a test exception.");
 
-  auto data_parts = this->_extract_data_sections(lines);
+  auto data_parts = this->ExtractDataSections(lines);
   for (const std::string &data_str : data_parts) {
 
     T chunk_processor;
-    auto cont = chunk_processor.parse_chunk_data(data_str, print);
+    auto cont = chunk_processor.ParseChunkData(data_str, print);
     if (!cont) {
       return cont;
     }
-    this->_combined_text += chunk_processor.get_combined_text();
+    this->combined_text_ += chunk_processor.CombinedText();
   }
   return true;
 }
@@ -39,12 +37,12 @@ ApiStreamHandler<T>::handle_data_lines(const std::string &lines, bool print) {
 // do not have to be separated by a blank line.
 template <typename T>
 std::vector<std::string>
-ApiStreamHandler<T>::_extract_data_sections(const std::string &input) {
+ApiStreamHandler<T>::ExtractDataSections(const std::string &input) {
   // Regex: find 'data:' followed by any amount of whitespace, then lazy capture
   // until a non-capturing newline or end of string. Use [\s\S] to match any
   // character including newlines.
   std::regex pattern(R"(data:\s*([\s\S]*?)(?:\n|$))");
-  std::vector<std::string> dataSections;
+  std::vector<std::string> data_sections;
 
   std::sregex_iterator iter(input.begin(), input.end(), pattern);
   std::sregex_iterator end;
@@ -52,11 +50,11 @@ ApiStreamHandler<T>::_extract_data_sections(const std::string &input) {
   while (iter != end) {
     std::smatch match = *iter;
     // Capture the data excluding the 'data:' prefix and trailing newline.
-    dataSections.push_back(match[1].str());
+    data_sections.push_back(match[1].str());
     ++iter;
   }
 
-  return dataSections;
+  return data_sections;
 }
 
 template class ApiStreamHandler<GPTChunkProcessor>;

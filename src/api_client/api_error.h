@@ -7,53 +7,57 @@
 // APIErrorType is used for for the API module, including errors in creating
 // prompts, errors returned by the API, and errors processing responses.
 enum class APIErrorType {
-  RESPONSE_JSON_PARSE,
-  REQUEST_JSON_PARSE,
-  RESPONSE_FIELD_PARSE,
-  API_RETURNED_ERROR,
-  HTTP_ERROR,
-  UNKNOWN
+  kResponseJsonParse,
+  kRequestJsonParse,
+  kResponseFieldParse,
+  kApiReturnedError,
+  kHttpError,
+  kUnknown
 };
 class APIError : public std::runtime_error {
 public:
   APIError(APIErrorType type, const std::string &msg,
            const std::exception &cause_exc)
-      : std::runtime_error(_constructMessage(msg, cause_exc)),
-        _error_type(type) {}
+      : std::runtime_error(ConstructMessage(msg, cause_exc)),
+        error_type_(type) {}
   APIError(APIErrorType type, const std::string &msg)
-      : std::runtime_error(msg), _error_type(type) {}
+      : std::runtime_error(msg), error_type_(type) {}
   APIError(APIErrorType type, const std::exception &cause_exc)
-      : std::runtime_error(cause_exc.what()), _error_type(type) {}
+      : std::runtime_error(cause_exc.what()), error_type_(type) {}
 
-  std::string format() const {
+  std::string Format() const {
     static const std::unordered_map<APIErrorType, std::string>
-        errorTypeStrings = {
-            {APIErrorType::RESPONSE_JSON_PARSE, "Response JSON Parse Error"},
-            {APIErrorType::REQUEST_JSON_PARSE, "Request JSON Parse Error"},
-            {APIErrorType::RESPONSE_FIELD_PARSE, "Response Field Parse Error"},
-            {APIErrorType::API_RETURNED_ERROR, "API Error"},
-            {APIErrorType::HTTP_ERROR, "HTTP Error"},
-            {APIErrorType::UNKNOWN, "Unknown Error"}};
+        kErrorTypeStrings = {
+            {APIErrorType::kResponseJsonParse, "Response JSON Parse Error"},
+            {APIErrorType::kRequestJsonParse, "Request JSON Parse Error"},
+            {APIErrorType::kResponseFieldParse, "Response Field Parse Error"},
+            {APIErrorType::kApiReturnedError, "API Error"},
+            {APIErrorType::kHttpError, "HTTP Error"},
+            {APIErrorType::kUnknown, "Unknown Error"}};
     std::string output =
-        "API Error: (Type: " + errorTypeStrings.at(_error_type) +
+        "API Error: (Type: " + kErrorTypeStrings.at(error_type_) +
         "): " + std::string(what());
     return output;
   }
-  std::string to_string() const { return format(); }
+  std::string to_string() const { // NOLINT(readability-identifier-naming)
+    return Format();
+  }
 
-  friend std::ostream &operator<<(std::ostream &os, const APIError &error) {
-    os << error.format();
+  friend std::ostream &
+  operator<<(std::ostream &os, // NOLINT(readability-identifier-length)
+             const APIError &error) {
+    os << error.Format();
     return os;
   }
 
-  APIErrorType type() const { return _error_type; }
-  const std::string message() const { return this->what(); }
+  APIErrorType Type() const { return error_type_; }
+  std::string Message() const { return this->what(); }
 
 private:
-  APIErrorType _error_type;
+  APIErrorType error_type_;
 
-  static std::string _constructMessage(const std::string &apiMsg,
-                                       const std::exception &e) {
-    return apiMsg + ": " + e.what();
+  static std::string ConstructMessage(const std::string &api_msg,
+                                      const std::exception &err) {
+    return api_msg + ": " + err.what();
   }
 };

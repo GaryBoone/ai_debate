@@ -7,12 +7,12 @@
 
 class GeminiChunkProcessor : public IChunkProcessor {
 public:
-  tl::expected<bool, APIError> parse_chunk_data(const std::string &chunk_str,
-                                                bool print = false);
-  std::string get_combined_text() { return _combined_text; };
-  std::string get_finish_reason() { return _finish_reason; };
+  tl::expected<bool, APIError> ParseChunkData(const std::string &chunk_str,
+                                              bool print) override;
+  std::string CombinedText() override { return combined_text_; };
+  std::string FinishReason() override { return finish_reason_; };
 
 private:
-  std::string _combined_text;
-  std::string _finish_reason;
+  std::string combined_text_;
+  std::string finish_reason_;
 };

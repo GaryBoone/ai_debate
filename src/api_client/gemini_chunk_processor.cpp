@@ -1,5 +1,4 @@
 
-#include <cstdio>
 #include <iostream>
 #include <regex>
 #include <string>
@@ -9,19 +8,16 @@
 
 #include "gemini_chunk_processor.h"
 
-using json = nlohmann::json;
+using json = nlohmann::json; // NOLINT(readability-identifier-naming)
 
 // Process the chunks of data from the API response. Return whether to continue
 // processing the event stream.
 tl::expected<bool, APIError>
-GeminiChunkProcessor::parse_chunk_data(const std::string &chunk_str,
-                                       bool print) {
+GeminiChunkProcessor::ParseChunkData(const std::string &chunk_str, bool print) {
   // The chunk may be a data section with a '[DONE]' message, which is not valid
   // JSON. Check for that before attempting to parse JSON.
   std::regex done_re(R"(^\s*[DONE]\s*$)");
   if (std ::regex_search(chunk_str, done_re)) {
-    printf("rec'd [DONE]\n");
-    fflush(stdout);
     return false;
   }
   try {
@@ -29,41 +25,39 @@ GeminiChunkProcessor::parse_chunk_data(const std::string &chunk_str,
 
     json choices = chunk_data.value("candidates", json::array());
     if (choices.empty()) {
-      return tl::unexpected(APIError(APIErrorType::RESPONSE_JSON_PARSE,
+      return tl::unexpected(APIError(APIErrorType::kResponseJsonParse,
                                      "no candidates in chunk data."));
     }
     json choice = choices[0];
     if (choice.empty()) {
-      return tl::unexpected(APIError(APIErrorType::RESPONSE_JSON_PARSE,
+      return tl::unexpected(APIError(APIErrorType::kResponseJsonParse,
                                      "no choice in candidates."));
     }
 
     json content = choice.value("content", json::object());
     if (content.empty()) {
       return tl::unexpected(
-          APIError(APIErrorType::RESPONSE_JSON_PARSE, "no content in choice."));
+          APIError(APIErrorType::kResponseJsonParse, "no content in choice."));
     }
 
     json parts = content.value("parts", json::object());
     if (parts.empty()) {
       return tl::unexpected(
-          APIError(APIErrorType::RESPONSE_JSON_PARSE, "no parts in content."));
+          APIError(APIErrorType::kResponseJsonParse, "no parts in content."));
     }
     json text = parts[0].value("text", json::object());
     if (text.empty()) {
       return tl::unexpected(
-          APIError(APIErrorType::RESPONSE_JSON_PARSE, "no text in parts."));
+          APIError(APIErrorType::kResponseJsonParse, "no text in parts."));
     }
     std::string str = text.get<std::string>();
     if (print) {
-      printf("%s", str.c_str());
-      fflush(stdout);
+      std::cout << str << std::flush;
     }
-    this->_combined_text += str;
+    this->combined_text_ += str;
 
   } catch (const json::parse_error &e) {
-    return tl::unexpected(
-        APIError(APIErrorType::RESPONSE_JSON_PARSE, e.what()));
+    return tl::unexpected(APIError(APIErrorType::kResponseJsonParse, e.what()));
   }
 
   return true;

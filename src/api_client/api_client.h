@@ -1,6 +1,5 @@
 #pragma once
 
-#include <regex>
 #include <string>
 
 #include "api_stream_handler.h"
@@ -8,17 +7,18 @@
 
 template <typename T> class ApiClient {
 public:
-  ApiClient(std::unique_ptr<IRequestMaker> request_maker)
-      : _request_maker(std::move(request_maker)) {}
+  explicit ApiClient(std::unique_ptr<IRequestMaker> request_maker)
+      : request_maker_(std::move(request_maker)) {}
 
-  tl::expected<std::string, APIError> get_completion(const std::string &prompt,
-                                                     bool print = false);
+  tl::expected<std::string, APIError> Chat(const std::string &prompt,
+                                           bool print = false);
 
 private:
-  std::unique_ptr<IRequestMaker> _request_maker;
-  ApiStreamHandler<T> _stream_handler;
+  static const int kSuccessCode = 200;
+  std::unique_ptr<IRequestMaker> request_maker_;
+  ApiStreamHandler<T> stream_handler_;
 
-  std::string _filter_type_error_string(const std::string &raw_line);
-  std::string _filter_by_line(const std::string &raw_line);
-  APIError _parse_error(const std::string &raw_line);
+  std::string FilterTypeErrorString(const std::string &raw_line);
+  std::string FilterByLine(const std::string &raw_line);
+  APIError ParseError(const std::string &error_str);
 };
