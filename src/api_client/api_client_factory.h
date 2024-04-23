@@ -10,6 +10,7 @@
 #include "gpt_chunk_processor.h"
 #include "gpt_request_maker.h"
 
+// Factory class to create API clients for GPT, Claude, and Gemini.
 class APIClientFactory {
 public:
   static ApiClient<GPTChunkProcessor> CreateGPTClient(std::string api_key) {

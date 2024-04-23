@@ -10,6 +10,7 @@ struct APIRequest {
   cpr::Body body;
 };
 
+// Interface for creating API requests.
 class IRequestMaker { // NOLINT(cppcoreguidelines-special-member-functions)
 public:
   virtual APIRequest Create(const std::string &prompt) = 0;

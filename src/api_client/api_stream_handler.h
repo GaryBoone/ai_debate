@@ -6,6 +6,10 @@
 
 #include "i_chunk_processor.h"
 
+// The ApiStreamHandler class is a template class that handles the processing of
+// data streams from the API. It is templated on the type of IChunkProcessor,
+// an interface that will specialize the processing for the specific API being
+// used, Claude, Gemini, or GPT.
 template <typename T> class ApiStreamHandler {
 public:
   ApiStreamHandler() { static_assert(std::is_base_of_v<IChunkProcessor, T>); }

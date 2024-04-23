@@ -5,6 +5,7 @@
 
 #include "api_error.h"
 
+// Interface for processing chunks of data.
 class IChunkProcessor { // NOLINT(cppcoreguidelines-special-member-functions)
 public:
   virtual tl::expected<bool, APIError>
