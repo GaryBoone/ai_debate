@@ -26,6 +26,7 @@ set(MAIN_SOURCE
 
 # Source files without the main file.
 set(APP_SOURCES
+  src/chat.cpp
   src/api_client/api_client.cpp
   src/api_client/api_stream_handler.cpp
   src/api_client/gpt_chunk_processor.cpp

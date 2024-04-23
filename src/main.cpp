@@ -4,11 +4,8 @@
 
 #include <cpr/cpr.h>
 
-#include "api_client/api_client.h"
 #include "api_client/api_client_factory.h"
-#include "api_client/claude_chunk_processor.h"
-#include "api_client/gemini_chunk_processor.h"
-#include "api_client/gpt_chunk_processor.h"
+#include "chat.h"
 #include "util/stacktrace.h"
 
 std::string ReadApiKey(const char *env_var_name) {
@@ -36,7 +33,8 @@ int main() {
   std::cout << "\n\n************** API--Claude **************\n" << std::flush;
   std::string anthropic_key = ReadApiKey("ANTHROPIC_API_KEY");
   auto claude_client = APIClientFactory::CreateClaudeClient(anthropic_key);
-  auto claude_res = claude_client.CallApi(prompt, true);
+  Chat claude_chat = Chat(std::move(claude_client));
+  auto claude_res = claude_chat.SendMessage(prompt, true);
   if (!claude_res) {
     std::cerr << claude_res.error() << std::endl;
   }
@@ -46,7 +44,8 @@ int main() {
   std::cout << "\n\n************** API--GPT **************\n" << std::flush;
   std::string gpt_api_key = ReadApiKey("OPENAI_API_KEY");
   auto gpt_client = APIClientFactory::CreateGPTClient(gpt_api_key);
-  auto gpt_res = gpt_client.CallApi(prompt, true);
+  Chat gpt_chat = Chat(std::move(gpt_client));
+  auto gpt_res = gpt_chat.SendMessage(prompt, true);
   if (!gpt_res) {
     std::cerr << gpt_res.error() << std::endl;
   }
@@ -56,7 +55,8 @@ int main() {
   std::cout << "\n\n************** API--Gemini **************\n" << std::flush;
   std::string gemini_key = ReadApiKey("GEMINI_API_KEY");
   auto gemini_client = APIClientFactory::CreateGeminiClient(gemini_key);
-  auto gemini_res = gemini_client.CallApi(prompt, true);
+  Chat gemini_chat = Chat(std::move(gemini_client));
+  auto gemini_res = gemini_chat.SendMessage(prompt, true);
   if (!gemini_res) {
     std::cerr << gemini_res.error() << std::endl;
   }

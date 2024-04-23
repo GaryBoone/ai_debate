@@ -3,6 +3,7 @@
 #include <string>
 
 #include "api_stream_handler.h"
+#include "i_api_client.h"
 #include "i_request_maker.h"
 
 // The ApiClient class manages requests and response to the chat APIs. It is
@@ -35,7 +36,7 @@
 //    difference is negligible in this case. Also, the binary size is larger
 //    with templates, about 2% here.
 
-template <typename CP, typename RM> class ApiClient {
+template <typename CP, typename RM> class ApiClient : public IApiClient {
 public:
   explicit ApiClient(std::string api_key) : request_maker_(api_key) {
     static_assert(std::is_base_of_v<IChunkProcessor, CP>);
@@ -43,7 +44,11 @@ public:
   }
 
   tl::expected<std::string, APIError> CallApi(const std::string &prompt,
-                                              bool print = false);
+                                              bool print) override;
+  ApiClient(const ApiClient &) = delete;
+  ApiClient &operator=(const ApiClient &) = delete;
+  ApiClient(ApiClient &&) = delete;
+  ApiClient &operator=(ApiClient &&) = delete;
 
 private:
   static const int kSuccessCode = 200;
