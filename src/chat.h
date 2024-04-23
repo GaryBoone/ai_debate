@@ -17,10 +17,15 @@ public:
   Chat &operator=(Chat &&) = delete;
   ~Chat() = default;
 
-  tl::expected<bool, APIError> SetSystemPrompt(const std::string &message);
-  tl::expected<std::string, APIError> SendMessage(const std::string &message,
+  void SetSystemPrompt(const std::string &prompt) { system_prompt_ = prompt; }
+
+  void AddMessage(const Message &message) { messages_.push_back(message); }
+
+  tl::expected<std::string, APIError> SendMessage(const Message &message,
                                                   bool print);
 
 private:
   std::unique_ptr<IApiClient> api_client_;
+  std::string system_prompt_;
+  std::vector<Message> messages_;
 };

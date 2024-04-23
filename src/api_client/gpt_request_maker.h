@@ -10,7 +10,12 @@ public:
                            const int max_tokens = 1000,
                            const std::string &model = "gpt-4-1106-preview")
       : gpt_api_key_(api_key), model_(model), max_tokens_(max_tokens) {}
-  APIRequest Create(const std::string &prompt) override;
+
+  nlohmann::json CreateMessage(const std::string &role,
+                               const std::string &text) override;
+
+  APIRequest Create(const std::string &system_prompt,
+                    const std::vector<Message> &prompt) override;
 
 private:
   std::string url_ = "https://api.openai.com/v1/chat/completions";

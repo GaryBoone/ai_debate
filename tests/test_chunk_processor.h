@@ -7,8 +7,8 @@
 
 class TestChunkProcessor : public IChunkProcessor {
 public:
-  tl::expected<bool, APIError> ParseChunkData(const std::string &chunk_str,
-                                              bool print) override {
+  tl::expected<bool, APIError> ParseChunkData(const std::string & /*chunk_str*/,
+                                              bool /*print*/) override {
     return true;
   };
   std::string CombinedText() override { return ""; };

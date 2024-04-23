@@ -43,12 +43,15 @@ public:
     static_assert(std::is_base_of_v<IRequestMaker, RM>);
   }
 
-  tl::expected<std::string, APIError> CallApi(const std::string &prompt,
-                                              bool print) override;
+  tl::expected<std::string, APIError>
+  CallApi(const std::string &system_prompt,
+          const std::vector<Message> &messages, bool print) override;
+
   ApiClient(const ApiClient &) = delete;
   ApiClient &operator=(const ApiClient &) = delete;
   ApiClient(ApiClient &&) = delete;
   ApiClient &operator=(ApiClient &&) = delete;
+  ~ApiClient() override = default;
 
 private:
   static const int kSuccessCode = 200;

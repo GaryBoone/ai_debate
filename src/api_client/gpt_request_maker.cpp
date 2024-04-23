@@ -6,14 +6,23 @@
 
 using json = nlohmann::json; // NOLINT(readability-identifier-naming)
 
-APIRequest GPTRequestMaker::Create(const std::string &prompt) {
+json GPTRequestMaker::CreateMessage(
+    const std::string &role, // NOLINT(bugprone-easily-swappable-parameters)
+    const std::string &text) {
+  return json{{"role", role}, {"content", text}};
+}
+
+APIRequest GPTRequestMaker::Create(const std::string &system_prompt,
+                                   const std::vector<Message> &prompts) {
   // https://platform.openai.com/docs/api-reference/chat/create
   // Roles are: "system", "user", "assistant", "tool", "functions"
   json messages = json::array();
-  messages.push_back(json{{"role", "system"},
-                          {"content", "You are a playful poet who returns "
-                                      "responses with nouns in all-caps."}});
-  messages.push_back(json{{"role", "user"}, {"content", prompt}});
+  messages.push_back(this->CreateMessage("system", system_prompt));
+  // messages.push_back(json{{"role", "user"}, {"content", prompt}});
+  for (const auto &message : prompts) {
+    messages.push_back(
+        this->CreateMessage(message.user ? "user" : "assistant", message.text));
+  }
   try {
     std::string body = json{
         {"model", this->model_},
