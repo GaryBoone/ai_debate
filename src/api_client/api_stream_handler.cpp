@@ -4,6 +4,7 @@
 
 #include <cpr/cpr.h>
 
+#include "../../tests/test_chunk_processor.h"
 #include "api_stream_handler.h"
 #include "claude_chunk_processor.h"
 #include "gemini_chunk_processor.h"
@@ -12,15 +13,15 @@
 // Process the lines of data from the API response by breaking it up into its
 // data sections and processing each chunk. Return whether to continue
 // processing the event stream.
-template <typename T>
+template <typename CP>
 tl::expected<bool, APIError>
-ApiStreamHandler<T>::HandleDataLines(const std::string &lines, bool print) {
+ApiStreamHandler<CP>::HandleDataLines(const std::string &lines, bool print) {
   // throw std::runtime_error("This is a test exception.");
 
   auto data_parts = this->ExtractDataSections(lines);
   for (const std::string &data_str : data_parts) {
 
-    T chunk_processor;
+    CP chunk_processor;
     auto cont = chunk_processor.ParseChunkData(data_str, print);
     if (!cont) {
       return cont;
@@ -35,9 +36,9 @@ ApiStreamHandler<T>::HandleDataLines(const std::string &lines, bool print) {
 // the extracted data sections, without the 'data:' prefix and trailing newline.
 // The matcher is forgiving of leading and trailing whitespace and data sections
 // do not have to be separated by a blank line.
-template <typename T>
+template <typename CP>
 std::vector<std::string>
-ApiStreamHandler<T>::ExtractDataSections(const std::string &input) {
+ApiStreamHandler<CP>::ExtractDataSections(const std::string &input) {
   // Regex: find 'data:' followed by any amount of whitespace, then lazy capture
   // until a non-capturing newline or end of string. Use [\s\S] to match any
   // character including newlines.
@@ -60,3 +61,4 @@ ApiStreamHandler<T>::ExtractDataSections(const std::string &input) {
 template class ApiStreamHandler<GPTChunkProcessor>;
 template class ApiStreamHandler<GeminiChunkProcessor>;
 template class ApiStreamHandler<ClaudeChunkProcessor>;
+template class ApiStreamHandler<TestChunkProcessor>;

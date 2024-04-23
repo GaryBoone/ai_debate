@@ -10,9 +10,9 @@
 // data streams from the API. It is templated on the type of IChunkProcessor,
 // an interface that will specialize the processing for the specific API being
 // used, Claude, Gemini, or GPT.
-template <typename T> class ApiStreamHandler {
+template <typename CP> class ApiStreamHandler {
 public:
-  ApiStreamHandler() { static_assert(std::is_base_of_v<IChunkProcessor, T>); }
+  ApiStreamHandler() { static_assert(std::is_base_of_v<IChunkProcessor, CP>); }
   tl::expected<bool, APIError> HandleDataLines(const std::string &lines,
                                                bool print = false);
 

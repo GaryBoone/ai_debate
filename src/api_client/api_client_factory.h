@@ -13,19 +13,17 @@
 // Factory class to create API clients for GPT, Claude, and Gemini.
 class APIClientFactory {
 public:
-  static ApiClient<GPTChunkProcessor> CreateGPTClient(std::string api_key) {
-    return ApiClient<GPTChunkProcessor>(
-        std::make_unique<GPTRequestMaker>(api_key));
+  static ApiClient<GPTChunkProcessor, GPTRequestMaker>
+  CreateGPTClient(std::string api_key) {
+    return ApiClient<GPTChunkProcessor, GPTRequestMaker>(api_key);
   }
-  static ApiClient<ClaudeChunkProcessor>
+  static ApiClient<ClaudeChunkProcessor, ClaudeRequestMaker>
   CreateClaudeClient(std::string api_key) {
-    return ApiClient<ClaudeChunkProcessor>(
-        std::make_unique<ClaudeRequestMaker>(api_key));
+    return ApiClient<ClaudeChunkProcessor, ClaudeRequestMaker>(api_key);
   }
 
-  static ApiClient<GeminiChunkProcessor>
+  static ApiClient<GeminiChunkProcessor, GeminiRequestMaker>
   CreateGeminiClient(std::string api_key) {
-    return ApiClient<GeminiChunkProcessor>(
-        std::make_unique<GeminiRequestMaker>(api_key));
+    return ApiClient<GeminiChunkProcessor, GeminiRequestMaker>(api_key);
   }
 };

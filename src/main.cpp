@@ -35,9 +35,8 @@ int main() {
 #ifdef DO_CLAUDE
   std::cout << "\n\n************** API--Claude **************\n" << std::flush;
   std::string anthropic_key = ReadApiKey("ANTHROPIC_API_KEY");
-  ApiClient<ClaudeChunkProcessor> claude_client =
-      APIClientFactory::CreateClaudeClient(anthropic_key);
-  auto claude_res = claude_client.Chat(prompt, true);
+  auto claude_client = APIClientFactory::CreateClaudeClient(anthropic_key);
+  auto claude_res = claude_client.CallApi(prompt, true);
   if (!claude_res) {
     std::cerr << claude_res.error() << std::endl;
   }
@@ -46,9 +45,8 @@ int main() {
 #ifdef DO_GPT
   std::cout << "\n\n************** API--GPT **************\n" << std::flush;
   std::string gpt_api_key = ReadApiKey("OPENAI_API_KEY");
-  ApiClient<GPTChunkProcessor> gpt_client =
-      APIClientFactory::CreateGPTClient(gpt_api_key);
-  auto gpt_res = gpt_client.Chat(prompt, true);
+  auto gpt_client = APIClientFactory::CreateGPTClient(gpt_api_key);
+  auto gpt_res = gpt_client.CallApi(prompt, true);
   if (!gpt_res) {
     std::cerr << gpt_res.error() << std::endl;
   }
@@ -57,9 +55,8 @@ int main() {
 #ifdef DO_GEMINI
   std::cout << "\n\n************** API--Gemini **************\n" << std::flush;
   std::string gemini_key = ReadApiKey("GEMINI_API_KEY");
-  ApiClient<GeminiChunkProcessor> gemini_client =
-      APIClientFactory::CreateGeminiClient(gemini_key);
-  auto gemini_res = gemini_client.Chat(prompt, true);
+  auto gemini_client = APIClientFactory::CreateGeminiClient(gemini_key);
+  auto gemini_res = gemini_client.CallApi(prompt, true);
   if (!gemini_res) {
     std::cerr << gemini_res.error() << std::endl;
   }

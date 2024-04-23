@@ -2,9 +2,10 @@
 
 #define private public
 #include "../src/api_client/api_client.h"
-#include "../src/api_client/claude_chunk_processor.h"
+#include "test_chunk_processor.h"
+#include "test_request_maker.h"
 
-using CLIENT = ApiClient<ClaudeChunkProcessor>;
+using CLIENT = ApiClient<TestChunkProcessor, TestRequestMaker>;
 
 // NOLINTBEGIN(cppcoreguidelines-avoid-do-while)
 TEST_CASE( // NOLINT(readability-function-cognitive-complexity)
