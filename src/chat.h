@@ -19,7 +19,9 @@ public:
 
   void SetSystemPrompt(const std::string &prompt) { system_prompt_ = prompt; }
 
-  void AddMessage(const Message &message) { messages_.push_back(message); }
+  void AddMessage(const Message &message);
+
+  tl::expected<std::string, APIError> SendMessages(bool print);
 
   tl::expected<std::string, APIError> SendMessage(const Message &message,
                                                   bool print);

@@ -3,10 +3,45 @@
 #include <string>
 
 #include <cpr/cpr.h>
+#include <vector>
 
 #include "api_client/api_client_factory.h"
 #include "chat.h"
 #include "util/stacktrace.h"
+
+const std::string kBaseSystemPrompt =
+    "You are a skilled rhetorician and expert debater. Take a position in the "
+    "given debate and provide a well-reasoned argument. Your response should "
+    "be about 2 paragraphs long. If someone has spoken before you, you should "
+    "respond to their points, agreeing or disagreeing with each point "
+    "specifically. Whether agreeing or note, improve the points of discussion "
+    "by questioning assumptions, undermining arguments, engaging ideas."
+    ""
+    "Do not respond with generalities such as 'I agree with your various "
+    "points' or 'I share your concerns'. Instead, list specific points of "
+    "agreement or disagreement. If you agree, explain why you agree and "
+    "provide additional support for the point. If you disagree, explain why "
+    "you disagree and provide counterarguments. If you are responding to a "
+    "point of agreement, explain why you agree and provide additional support "
+    "for the point. If you have nothing further to add, move on."
+    ""
+    "Note agreement if consensus is reached on a particular point. Do not "
+    "reargue agreed upon points. Drive toward a factual, well-supported "
+    "conclusion. Resolve the debate when the best facts are demonstrated."
+    "If the debate is resolved, respond with a one sentence summary, a list of "
+    "agreed upon points, and 'No further arguments'."
+    ""
+    "There will be 3 speakers. Mention them by name to clear who you are "
+    "responding to. Avoid repetition. Call out another speaker for repeating a "
+    "point."
+    ""
+    "Begin each of your responses with your name in the form of '<name>:'.";
+const std::string kProposition = "The debate proposition is 'AI will have a "
+                                 "positive effect on knowledge workers'.";
+const int kNumRounds = 5;
+const std::string kClaudeSystemPrompt = "Your name is Claude";
+const std::string kGeminiSystemPrompt = "Your name is Gemini";
+const std::string kGptSystemPrompt = "Your name is GPT";
 
 std::string ReadApiKey(const char *env_var_name) {
   const char *openai_key = std::getenv(env_var_name);
@@ -21,74 +56,53 @@ std::string ReadApiKey(const char *env_var_name) {
 int main() {
   std::set_terminate(globalExceptionHandler);
 
-  const std::string system_prompt =
-      "You are a playful poet who returns responses with nouns in all-caps.";
-  const std::string prompt = "Return just the first 2 lines of "
-                             "Chaucer's pre-copyright Canterbury Tales.";
-  std::cout << "Prompt: " << prompt << std::endl;
+  std::cout << kProposition << std::endl;
+  std::vector<std::reference_wrapper<Chat>> debaters;
 
-#define DO_CLAUDE
-#define DO_GPT
-#define DO_GEMINI
-
-#ifdef DO_CLAUDE
-  std::cout << "\n\n************** API--Claude **************\n" << std::flush;
   std::string anthropic_key = ReadApiKey("ANTHROPIC_API_KEY");
   auto claude_client = APIClientFactory::CreateClaudeClient(anthropic_key);
   Chat claude_chat = Chat(std::move(claude_client));
-  claude_chat.SetSystemPrompt(system_prompt);
-  auto claude_res = claude_chat.SendMessage(Message{true, prompt}, true);
-  if (!claude_res) {
-    std::cerr << claude_res.error() << std::endl;
-  }
-  claude_chat.AddMessage(Message{false, claude_res.value()});
-  std::cout << std::endl;
+  claude_chat.SetSystemPrompt(kBaseSystemPrompt + kClaudeSystemPrompt);
+  debaters.push_back(std::ref(claude_chat));
 
-  claude_res =
-      claude_chat.SendMessage(Message{true, "Reverse those lines."}, true);
-  if (!claude_res) {
-    std::cerr << claude_res.error() << std::endl;
-  }
-#endif
-
-#ifdef DO_GPT
-  std::cout << "\n\n************** API--GPT **************\n" << std::flush;
   std::string gpt_api_key = ReadApiKey("OPENAI_API_KEY");
   auto gpt_client = APIClientFactory::CreateGPTClient(gpt_api_key);
   Chat gpt_chat = Chat(std::move(gpt_client));
-  gpt_chat.SetSystemPrompt(system_prompt);
-  auto gpt_res = gpt_chat.SendMessage(Message{true, prompt}, true);
-  if (!gpt_res) {
-    std::cerr << gpt_res.error() << std::endl;
-  }
-  gpt_chat.AddMessage(Message{false, gpt_res.value()});
-  std::cout << std::endl;
+  gpt_chat.SetSystemPrompt(kBaseSystemPrompt + kGptSystemPrompt);
+  debaters.push_back(std::ref(gpt_chat));
 
-  gpt_res = gpt_chat.SendMessage(Message{true, "Reverse those lines."}, true);
-  if (!gpt_res) {
-    std::cerr << gpt_res.error() << std::endl;
-  }
-#endif
-
-#ifdef DO_GEMINI
-  std::cout << "\n\n************** API--Gemini **************\n" << std::flush;
   std::string gemini_key = ReadApiKey("GEMINI_API_KEY");
   auto gemini_client = APIClientFactory::CreateGeminiClient(gemini_key);
   Chat gemini_chat = Chat(std::move(gemini_client));
-  gemini_chat.SetSystemPrompt(system_prompt);
-  auto gemini_res = gemini_chat.SendMessage(Message{true, prompt}, true);
-  if (!gemini_res) {
-    std::cerr << gemini_res.error() << std::endl;
-  }
-  gemini_chat.AddMessage(Message{false, gemini_res.value()});
-  std::cout << std::endl;
+  gemini_chat.SetSystemPrompt(kBaseSystemPrompt + kGeminiSystemPrompt);
+  debaters.push_back(std::ref(gemini_chat));
 
-  gemini_res =
-      gemini_chat.SendMessage(Message{true, "Reverse those lines."}, true);
-  if (!gemini_res) {
-    std::cerr << gemini_res.error() << std::endl;
+  for (auto &debater : debaters) {
+    debater.get().AddMessage(Message{true, kProposition});
   }
-#endif
+
+  for (int round = 0; round < kNumRounds; round++) {
+    std::cout << "======= Round " << round + 1 << " ==========" << std::endl
+              << std::endl;
+
+    for (Chat &debater : debaters) {
+      auto res = debater.SendMessages(true);
+      if (!res) {
+        std::cerr << res.error() << std::endl;
+      }
+
+      // This response is an assistant response for the LLM that returned it,
+      // but a user response for the other models. Add the response to each
+      // debater's chat history, with the appropriate user flag.
+      std::for_each(debaters.begin(), debaters.end(),
+                    [&](std::reference_wrapper<Chat> &deb) {
+                      deb.get().AddMessage(
+                          Message{&deb.get() != &debater, res.value()});
+                    });
+
+      std::cout << std::endl << std::endl;
+    }
+  }
 
   std::cout << std::endl;
   return 0;
