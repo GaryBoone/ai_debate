@@ -1,9 +1,10 @@
 #include <cstdlib>
 #include <iostream>
 #include <string>
+#include <unistd.h>
+#include <vector>
 
 #include <cpr/cpr.h>
-#include <vector>
 
 #include "api_client/api_client_factory.h"
 #include "chat.h"
@@ -38,10 +39,37 @@ const std::string kBaseSystemPrompt =
     "Begin each of your responses with your name in the form of '<name>:'.";
 const std::string kProposition = "The debate proposition is 'AI will have a "
                                  "positive effect on knowledge workers'.";
+const std::string kAgreementKey = "No further arguments";
+
 const int kNumRounds = 5;
 const std::string kClaudeSystemPrompt = "Your name is Claude";
 const std::string kGeminiSystemPrompt = "Your name is Gemini";
 const std::string kGptSystemPrompt = "Your name is GPT";
+
+// Parse command line arguments, looking for --p <string> to provide the
+// debate proposition.
+bool ParseArgs(const std::vector<std::string> &args, std::string &string_arg) {
+  // Parse command line arguments
+  for (auto it = args.begin(); it != args.end(); ++it) {
+    if (*it == "--p") {
+      auto next_itr = std::next(it);
+      if (next_itr != args.end()) {
+        string_arg = *next_itr;
+        return true;
+      }
+      std::cerr << "Error: --p option requires a string." << std::endl;
+      return false;
+    }
+  }
+
+  // Check if the --t option was provided
+  if (string_arg.empty()) {
+    std::cerr << "Usage: " << args[0] << " --p <string>" << std::endl;
+    return false;
+  }
+
+  return true;
+}
 
 std::string ReadApiKey(const char *env_var_name) {
   const char *openai_key = std::getenv(env_var_name);
@@ -53,10 +81,16 @@ std::string ReadApiKey(const char *env_var_name) {
   return std::string(openai_key);
 }
 
-int main() {
+int main(int argc, char *argv[]) {
   std::set_terminate(globalExceptionHandler);
 
-  std::cout << kProposition << std::endl;
+  std::string debate_proposition;
+  std::vector<std::string> args(argv, argv + argc);
+  if (!ParseArgs(args, debate_proposition)) {
+    debate_proposition = "The debate proposition is '" + kProposition + "'.";
+  }
+
+  std::cout << debate_proposition << std::endl;
   std::vector<std::reference_wrapper<Chat>> debaters;
 
   std::string anthropic_key = ReadApiKey("ANTHROPIC_API_KEY");
@@ -78,22 +112,31 @@ int main() {
   debaters.push_back(std::ref(gemini_chat));
 
   for (auto &debater : debaters) {
-    debater.get().AddMessage(Message{true, kProposition});
+    debater.get().AddMessage(Message{true, debate_proposition});
   }
 
+  int agreements = 0;
   for (int round = 0; round < kNumRounds; round++) {
-    std::cout << "======= Round " << round + 1 << " ==========" << std::endl
+    std::cout << std::endl
+              << "======= Round " << round + 1 << " ==========" << std::endl
               << std::endl;
 
     for (Chat &debater : debaters) {
+
+      // Send the message and check for errors.
       auto res = debater.SendMessages(true);
       if (!res) {
         std::cerr << res.error() << std::endl;
       }
 
-      // This response is an assistant response for the LLM that returned it,
+      // Check for agreement.
+      if (res.value().find(kAgreementKey) != std::string::npos) {
+        agreements++;
+      };
+
+      // This response is an assistant response for the LLM that requested it,
       // but a user response for the other models. Add the response to each
-      // debater's chat history, with the appropriate user flag.
+      // debater's chat history with the appropriate user flag.
       std::for_each(debaters.begin(), debaters.end(),
                     [&](std::reference_wrapper<Chat> &deb) {
                       deb.get().AddMessage(
@@ -101,6 +144,14 @@ int main() {
                     });
 
       std::cout << std::endl << std::endl;
+    }
+
+    // After each round, check if the debate is resolved.
+    if (agreements == debaters.size()) {
+      std::cout << std::endl
+                << std::endl
+                << "Debate resolved. Exiting." << std::endl;
+      break;
     }
   }
 
