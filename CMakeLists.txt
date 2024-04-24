@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 
-project(openai_client)
+project(ai_debate_client)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON) 
@@ -115,8 +115,8 @@ include_directories(${doctest_SOURCE_DIR})
 
 # Avoid `file(GLOB SOURCES src/*.cpp)` because it won't pick up new files
 # automatically.
-add_executable(openai_app ${MAIN_SOURCE} ${APP_SOURCES})
-target_link_libraries(openai_app PRIVATE ${DEP_LIBS})
+add_executable(ai_debate_app ${MAIN_SOURCE} ${APP_SOURCES})
+target_link_libraries(ai_debate_app PRIVATE ${DEP_LIBS})
 
 
 # Define the tests.
@@ -125,16 +125,6 @@ set(TEST_SOURCES
   tests/api_client_test.cpp
 )
 
-add_executable(openai_tests ${APP_SOURCES} ${TEST_SOURCES})
-target_link_libraries(openai_tests PRIVATE ${DEP_LIBS} doctest)
-
-
-# Handle OPENAI_API_KEY with an option and proper usage instructions 
-option(USE_ENV_API_KEY "Use OPENAI_API_KEY environment variable if set" ON)
-
-if(USE_ENV_API_KEY)
-  add_definitions(-DUSE_ENV_API_KEY)
-else()
-  message(STATUS "Provide OPENAI_API_KEY via -DOPENAI_API_KEY=your_key during CMake configuration")
-endif()
+add_executable(ai_debate_tests ${APP_SOURCES} ${TEST_SOURCES})
+target_link_libraries(ai_debate_tests PRIVATE ${DEP_LIBS} doctest)
 
