@@ -1,4 +1,6 @@
+// Only one testing file should have the main function.
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+
 #include "doctest/doctest.h"
 
 #define private public

@@ -1,43 +1,13 @@
-
-#include <iostream>
-#include <ostream>
 #include <regex>
 #include <string>
 
 #include <cpr/cpr.h>
 
 #include "../../tests/test_chunk_processor.h"
-#include "../util/print_with_symbols.h"
 #include "api_stream_handler.h"
 #include "claude_chunk_processor.h"
 #include "gemini_chunk_processor.h"
 #include "gpt_chunk_processor.h"
-
-// TODO: Remove.
-// To make the JSON valid for parsing by nlohmann::json, we need to escape the
-// some characters.
-std::string filter_text(const std::string &input) {
-  std::unordered_map<std::string, std::string> replacements = {
-      {"\n", "\\n"} // , {"\r", "\\r"}, {"\t", "\\t"},
-                    // {"\b", "\\b"}, {"\f", "\\f"}, {"\"", "\\\""}
-  };
-
-  std::string result = input;
-  for (const auto &pair : replacements) {
-    size_t pos = 0;
-    while ((pos = result.find(pair.first, pos)) != std::string::npos) {
-      result.replace(pos, pair.first.length(), pair.second);
-      std::cout << std::endl
-                << std::endl
-                << "*************************** replaced " << pair.first
-                << " with: " << pair.second << std::endl
-                << std::endl
-                << std::flush;
-      pos += pair.second.length();
-    }
-  }
-  return result;
-}
 
 // Process the lines of data from the API response by breaking it up into its
 // data sections and processing each chunk. Return whether to continue
@@ -50,13 +20,6 @@ ApiStreamHandler<CP>::HandleDataLines(const std::string &lines, bool print) {
   for (const std::string &data_str : data_parts) {
 
     CP chunk_processor;
-    // TODO: Remove.
-    // std::cout << "Processing chunk: >" << data_str << "<" << std::endl;
-    // PrintStringWithSymbols("chunk", data_str);
-    // auto filtered_str = filter_text(data_str);
-    // std::cout << "   filtered_str: ->" << data_str << "<-" << std::endl;
-    // PrintStringWithSymbols("filtered_str------->>", data_str);
-    // auto cont = chunk_processor.ParseChunkData(filtered_str, print);
     auto cont = chunk_processor.ParseChunkData(data_str, print);
     if (!cont) {
       return cont;

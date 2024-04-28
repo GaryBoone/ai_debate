@@ -59,7 +59,6 @@ private:
   ApiStreamHandler<CP> stream_handler_;
 
   std::string FilterText(std::string &lines);
-  std::string TrimJsonString(const std::string &lines);
   bool HandleData(std::string &lines, const std::string &filtered_line,
                   bool print);
   bool HandleErrors(const std::string &filtered_line);

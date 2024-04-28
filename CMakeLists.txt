@@ -37,6 +37,7 @@ set(APP_SOURCES
   src/api_client/gemini_request_maker.cpp
   src/util/stacktrace.cpp
   src/util/json_printer.cpp
+  src/util/string_cleaner.cpp
 )
 
 # Library files.
@@ -124,6 +125,7 @@ target_link_libraries(ai_debate_app PRIVATE ${DEP_LIBS})
 set(TEST_SOURCES
   tests/chunk_processor_test.cpp
   tests/api_client_test.cpp
+  tests/string_cleaner_test.cpp
 )
 
 add_executable(ai_debate_tests ${APP_SOURCES} ${TEST_SOURCES})

@@ -1,5 +1,8 @@
+#include <algorithm>
 #include <cstdlib>
 #include <iostream>
+#include <memory>
+#include <random>
 #include <string>
 #include <unistd.h>
 #include <vector>
@@ -124,10 +127,14 @@ int main(int argc, char *argv[]) {
         ReadFileIntoString(system_prompt_filename) + "\n\n" + kBaseSystemPrompt;
   }
 
-  std::cout << "foo:" << std::endl;
+  std::cout << "Debate Proposition:" << std::endl;
   std::cout << debate_proposition << std::endl;
-  std::cout << "bar:" << std::endl;
+  std::cout << "System Prompt:" << std::endl;
   std::cout << system_prompt << std::endl;
+
+  std::random_device rnd;
+  std::mt19937 rng(rnd());
+  std::uniform_int_distribution<int> dist(0, 2);
 
   std::vector<std::reference_wrapper<Chat>> debaters;
 
@@ -149,6 +156,13 @@ int main(int argc, char *argv[]) {
   gemini_chat.SetSystemPrompt(system_prompt + kGeminiSystemPrompt);
   debaters.push_back(std::ref(gemini_chat));
 
+  std::vector<std::reference_wrapper<Chat>> temp_debaters = {
+      std::ref(claude_chat), std::ref(gpt_chat), std::ref(gemini_chat)};
+
+  // Shuffle the temporary container.
+  std::shuffle(temp_debaters.begin(), temp_debaters.end(), rng);
+
+  debaters = std::move(temp_debaters);
   for (auto &debater : debaters) {
     debater.get().AddMessage(Message{true, debate_proposition});
   }
