@@ -21,10 +21,10 @@ public:
 
   void AddMessage(const Message &message);
 
-  tl::expected<std::string, APIError> SendMessages(bool print);
+  tl::expected<Response, APIError> SendMessages(bool print);
 
-  tl::expected<std::string, APIError> SendMessage(const Message &message,
-                                                  bool print);
+  tl::expected<Response, APIError> SendMessage(const Message &message,
+                                               bool print);
 
 private:
   std::unique_ptr<IApiClient> api_client_;

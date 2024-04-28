@@ -27,7 +27,10 @@ APIRequest GeminiRequestMaker::Create(const std::string &system_prompt,
           CreateMessage(message.user ? "user" : "model", message.text));
     }
     body["contents"] = json_messages;
-    body["generation_config"] = json{{"max_output_tokens", this->max_tokens_}};
+    body["generation_config"] = json{
+        {"max_output_tokens", this->max_tokens_},
+        {"response_mime_type", "application/json"},
+    };
     return APIRequest{
         cpr::Url{this->url_ + "?alt=sse&key=" + this->gemini_api_key_},
         cpr::Header{{"content-type", "application/json"},

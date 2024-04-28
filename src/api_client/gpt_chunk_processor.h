@@ -9,7 +9,7 @@ class GPTChunkProcessor : public IChunkProcessor {
 public:
   tl::expected<bool, APIError> ParseChunkData(const std::string &chunk_str,
                                               bool print) override;
-  std::string CombinedText() override { return combined_text_; };
+  std::string ParsedText() override { return combined_text_; };
   std::string FinishReason() override { return finish_reason_; };
 
 private:

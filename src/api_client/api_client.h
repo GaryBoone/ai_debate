@@ -43,9 +43,9 @@ public:
     static_assert(std::is_base_of_v<IRequestMaker, RM>);
   }
 
-  tl::expected<std::string, APIError>
-  CallApi(const std::string &system_prompt,
-          const std::vector<Message> &messages, bool print) override;
+  tl::expected<Response, APIError> CallApi(const std::string &system_prompt,
+                                           const std::vector<Message> &messages,
+                                           bool print) override;
 
   ApiClient(const ApiClient &) = delete;
   ApiClient &operator=(const ApiClient &) = delete;
@@ -59,6 +59,7 @@ private:
   ApiStreamHandler<CP> stream_handler_;
 
   std::string FilterText(std::string &lines);
+  std::string TrimJsonString(const std::string &lines);
   bool HandleData(std::string &lines, const std::string &filtered_line,
                   bool print);
   bool HandleErrors(const std::string &filtered_line);

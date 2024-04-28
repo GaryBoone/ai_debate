@@ -17,10 +17,15 @@ APIRequest ClaudeRequestMaker::Create(const std::string &system_prompt,
   // Roles: "system", "user", "assistant"
   auto json_messages = json::array();
   for (const auto &message : messages) {
-    auto user_message =
-        this->CreateMessage(message.user ? "user" : "assistant", message.text);
-    json_messages.push_back(user_message);
+    json_messages.push_back(
+        this->CreateMessage(message.user ? "user" : "assistant", message.text));
   }
+  // The Claude API requires the assistant message to be prefilled with a
+  // starter '{' character to ensure that the response is valid JSON. Otherwise,
+  // the model tends to generate a text preamble like "Here is my response in
+  // JSON format: { ... }" instead of just returning the JSON.
+  // https://docs.anthropic.com/claude/docs/control-output-format#prefilling-claudes-response
+  json_messages.push_back(this->CreateMessage("assistant", "{"));
   try {
     std::string body = json{
         {"model", this->model_},

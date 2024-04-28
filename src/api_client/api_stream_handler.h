@@ -18,6 +18,7 @@ public:
 
   // Accessors.
   std::string CombinedText() { return combined_text_; }
+  void ClearText() { combined_text_.clear(); }
 
 private:
   static std::vector<std::string> ExtractDataSections(const std::string &input);

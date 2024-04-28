@@ -71,10 +71,10 @@ ClaudeChunkProcessor::ParseChunkData(const std::string &chunk_str, bool print) {
                                      "text field is not a string"));
     }
     std::string text = text_json.get<std::string>();
-    if (print) {
-      std::cout << text << std::flush;
-    }
     this->combined_text_ += text;
+    // if (print) {
+    //   std::cout << text << std::flush;
+    // }
   } catch (const json::parse_error &e) {
     return tl::unexpected(APIError(APIErrorType::kResponseJsonParse, e.what()));
   }

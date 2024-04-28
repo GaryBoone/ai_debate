@@ -11,6 +11,6 @@ public:
                                               bool /*print*/) override {
     return true;
   };
-  std::string CombinedText() override { return ""; };
+  std::string ParsedText() override { return ""; };
   std::string FinishReason() override { return ""; };
 };

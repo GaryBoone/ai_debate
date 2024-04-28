@@ -36,6 +36,7 @@ set(APP_SOURCES
   src/api_client/gemini_chunk_processor.cpp
   src/api_client/gemini_request_maker.cpp
   src/util/stacktrace.cpp
+  src/util/json_printer.cpp
 )
 
 # Library files.
