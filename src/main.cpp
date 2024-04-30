@@ -167,14 +167,14 @@ int main(int argc, char *argv[]) {
     debater.get().AddMessage(Message{true, debate_proposition});
   }
 
-  int agreements = 0;
+  std::vector<bool> agreements(debaters.size(), false);
   for (int round = 0; round < kNumRounds; round++) {
     std::cout << std::endl
               << "======= Round " << round + 1 << " ==========" << std::endl
               << std::endl;
 
-    for (Chat &debater : debaters) {
-
+    for (int i = 0; i < debaters.size(); i++) {
+      auto &debater = debaters[i].get();
       // Send the message and check for errors.
       auto res = debater.SendMessages(true);
       if (!res) {
@@ -182,28 +182,24 @@ int main(int argc, char *argv[]) {
       }
 
       // Check for agreement.
-      if (res.value().done) {
-        agreements++;
-      };
+      agreements[i] = res.value().done;
+      if (std::all_of(agreements.begin(), agreements.end(),
+                      [](bool val) { return val; })) {
+        std::cout << std::endl
+                  << std::endl
+                  << "Debate resolved. Exiting." << std::endl;
+        exit(0);
+      }
 
       // This response is an assistant response for the LLM that requested
       // it, but a user response for the other models. Add the response to
       // each debater's chat history with the appropriate user flag.
-      std::for_each(debaters.begin(), debaters.end(),
-                    [&](std::reference_wrapper<Chat> &deb) {
-                      deb.get().AddMessage(
-                          Message{&deb.get() != &debater, res.value().text});
-                    });
-
+      for (auto &deb_ref : debaters) {
+        Chat &deb = deb_ref.get();
+        bool is_sender = (&deb == &debater);
+        deb.AddMessage(Message{!is_sender, res.value().text});
+      }
       std::cout << std::endl << std::endl;
-    }
-
-    // After each round, check if the debate is resolved.
-    if (agreements == debaters.size()) {
-      std::cout << std::endl
-                << std::endl
-                << "Debate resolved. Exiting." << std::endl;
-      break;
     }
   }
 
